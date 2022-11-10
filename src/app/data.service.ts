@@ -38,7 +38,7 @@ function evalTestLocally(t: TestCase): TestCaseResult {
   providedIn: 'root'
 })
 export class DataService {
-  private testSuitesBS = new BehaviorSubject<TestSuite[]>([]);
+  private testSuitesBS = new BehaviorSubject<readonly TestSuite[]>([]);
   readonly testSuites = this.testSuitesBS.asObservable();
   readonly localTestsSuitesResults: Observable<TestSuiteResults[]> = this.testSuites.pipe(
     tap( Lts => console.log("Lts =", Lts) ),

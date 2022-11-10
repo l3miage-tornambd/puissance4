@@ -27,14 +27,14 @@
                 <ng-container *ngSwitchCase="'isValid'">
                     <mat-form-field appearance="fill">
                         <mat-label>valid</mat-label>
-                        <mat-select [(ngModel)]="expectIsValid_valid" name="expectIsValidv_valid">
+                        <mat-select [(ngModel)]="expectIsValid.valid" name="expectIsValidv_valid">
                           <mat-option [value]="true">true</mat-option>
                           <mat-option [value]="false">false</mat-option>
                         </mat-select>
                     </mat-form-field>
-                    <mat-form-field appearance="fill" *ngIf="!expectIsValid_valid">
+                    <mat-form-field appearance="fill" *ngIf="!expectIsValid.valid">
                         <mat-label>reason</mat-label>
-                        <mat-select [(ngModel)]="expectIsValid_reason" name="expectIsValidv_reason">
+                        <mat-select [(ngModel)]="expectIsValid.reason" name="expectIsValidv_reason">
                           <mat-option *ngFor="let reason of expectIsValid_allReasons" [value]="reason">
                             {{reason}}
                           </mat-option>
