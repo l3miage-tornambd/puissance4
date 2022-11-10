@@ -1,0 +1,29 @@
+$W: 16px;
+
+table {
+    border-collapse: collapse;
+    border: solid black 2px;
+
+    td {
+        background-color: lightgrey;
+        width: $W;
+        height: $W;
+
+        > div {
+            border: solid black 1px;
+            border-radius: 50%;
+            width: 90%;
+            height: 90%;
+            background-color: white;
+        }
+    }
+
+    td.P1 > div {
+        background-color: red;
+    }
+
+    td.P2 > div {
+        background-color: yellow;
+    }
+
+}

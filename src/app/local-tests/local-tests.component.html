@@ -1,0 +1,10 @@
+<app-bloc-tests
+    *ngFor  = "let ts of localTestsSuitesResults | async"
+    [suite] = "ts"
+></app-bloc-tests>
+<button mat-mini-fab color="primary" 
+        aria-label="New test suite"
+        (click) = "appendTestSuite()"
+        >
+    + <!-- <mat-icon>plus</mat-icon> -->
+</button>

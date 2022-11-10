@@ -1,0 +1,16 @@
+summary  label.pass {
+    color: green;
+}
+
+summary  label.fail {
+    color: red;
+}
+
+section.testcase {
+    display: flex;
+    flex-flow: row;
+
+    > * {
+        margin-right: 1em;
+    }
+}

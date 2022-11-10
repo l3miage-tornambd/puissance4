@@ -1,0 +1,59 @@
+
+<mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="edit">
+        <mat-icon>edit</mat-icon>
+        <span>Edit</span>
+    </button>
+    <button mat-menu-item (click)="delete()">
+        <mat-icon>delete</mat-icon>
+        <span>Delete</span>
+    </button>
+</mat-menu>
+
+<summary>
+    <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
+        <mat-icon>more_vert</mat-icon>
+        <label [class]="validClass">{{test.comment}}</label>
+    </button>
+    <details>
+        <section class="testcase">
+
+            <ng-container [ngSwitch]="test.op">
+                <ng-container *ngSwitchCase="'isValid'">
+                    <label>isValid</label>
+                    <app-game-state [state]="test.params[0]" ></app-game-state>
+                </ng-container>
+                <ng-container *ngSwitchCase="'winner'">
+                    <label>winner</label>
+                    <app-game-state [state]="test.params[0]" ></app-game-state>
+                </ng-container>
+                <ng-container *ngSwitchCase="'play'">
+                    <label>play</label>
+                    <app-game-state [state]="test.params[0]" ></app-game-state>
+
+                </ng-container>
+            </ng-container>
+
+            <ng-container *ngIf="hasResult; else noRes">
+                <label *ngIf="asTestResult.pass; else failureLabel">returns <pre>{{asTestResult.result | json}}</pre></label>
+                <ng-template #failureLabel>returns <pre>{{asTestResult.result | json}}</pre> but we were expecting <pre>{{asTestResult.expect | json}}</pre></ng-template>
+
+            </ng-container>
+            <ng-template #noRes>
+                <label>should returns</label>
+                <ng-container [ngSwitch]="test.op">
+                    <ng-container *ngSwitchCase="'isValid'">
+                        <pre>{{test.expect | json}}</pre>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'winner'">
+                        
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'play'">
+                            
+                    </ng-container>
+                </ng-container>
+            </ng-template>
+        </section>
+    </details>
+</summary>
+

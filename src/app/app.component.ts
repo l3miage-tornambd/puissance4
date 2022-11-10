@@ -6,5 +6,7 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'l3m-va-puissance4-2023';
+
+  constructor() {}
+
 }

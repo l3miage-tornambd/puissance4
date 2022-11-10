@@ -1,0 +1,9 @@
+<table>
+    <tbody>
+        <tr *ngFor="let nbL of lines">
+            <td *ngFor="let col of columns(nbL)" [class]="col">
+                <div></div>
+            </td>
+        </tr>
+    </tbody>
+</table>
