@@ -44,6 +44,7 @@ export class BlocTestsComponent implements OnInit {
 
     const ntc = await firstValueFrom( dialogRef.afterClosed() );
     if (ntc) {
+      console.log("got a new test case :", ntc);
       this.dataService.appendTestCase( this.suite, ntc );
     }
 

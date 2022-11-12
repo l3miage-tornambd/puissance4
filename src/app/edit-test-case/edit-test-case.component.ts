@@ -2,7 +2,7 @@ import { Component, OnInit, Inject, ChangeDetectionStrategy } from '@angular/cor
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { GAME_STATE } from 'src/data/grid';
 import { isValid } from 'src/data/isValid';
-import { play } from 'src/data/play';
+import { play, PLAY_FAILURE } from 'src/data/play';
 import { winner } from 'src/data/winner';
 import { TestCase } from '../data.service';
 
@@ -30,38 +30,36 @@ export class EditTestCaseComponent implements OnInit {
     "too much token for P1",
     "too much token for P2"
   ];
+  readonly expectWinnerValues: ReturnType<typeof winner>[] = [
+    "DRAW", "P1", "P2", "no winner yet"
+  ];
+  readonly expectPlay_allReasons: PLAY_FAILURE["reason"][] = [
+    "column is full", "game is over", "no such column"
+  ];
 
   op: TestCase["op"];
   state: GAME_STATE;
+  id: string;
+  comment = ""
 
   playColumn: number;
   expectIsValid: Mutable< ReturnType<typeof isValid> >; 
   expectWinner:  Mutable< ReturnType<typeof winner> >;
-  expectPlay:    Mutable< ReturnType<typeof play> >;
-
-  /*
-  get expectIsValid_valid(): boolean {
-    return this.expectIsValid.valid;
-  }
-  set expectIsValid_valid(v: boolean) {
-    this.expectIsValid = v ? {valid: true} : {valid: false, reason: this.expectIsValid_reason};
-  }
-  
-  get expectIsValid_reason(): Exclude<ReturnType<typeof isValid>, {valid: true}>["reason"] {
-    return this.expectIsValid.valid ? "There cannot be two winners" : this.expectIsValid.reason;
-  }
-  set expectIsValid_reason(reason: Exclude<ReturnType<typeof isValid>, {valid: true}>["reason"]) {
-    this.expectIsValid = {valid: false, reason};
-  }
-  */
+  expectPlaySuccess: boolean;
+  expectPlaySuccessState: GAME_STATE;
+  expectPlayFailureReason: PLAY_FAILURE["reason"];
 
   constructor(private dialogRef: MatDialogRef<EditTestCaseComponent>, @Inject(MAT_DIALOG_DATA) public test: TestCase) {
+    this.comment = test.comment;
+    this.id = test.id;
     this.op = test.op;
     this.state = test.params[0];
     this.playColumn = test.op === "play" ? test.params[1] : 1;
     this.expectIsValid = test.op === "isValid" ? {...test.expect} : {valid: true};
     this.expectWinner = test.op === "winner" ? test.expect : "no winner yet";
-    this.expectPlay = test.op === "play" ? {...test.expect} : {success: false, reason: "no such column"};
+    this.expectPlaySuccess = test.op === "play" ? test.expect.success : false;
+    this.expectPlaySuccessState = test.op === "play" && test.expect.success ? test.expect.state : test.params[0];
+    this.expectPlayFailureReason = test.op === "play" && !test.expect.success ? test.expect.reason : "no such column";
   }
 
   ngOnInit(): void {
@@ -72,11 +70,16 @@ export class EditTestCaseComponent implements OnInit {
   }
 
   ok() {
-    this.dialogRef.close(
-      this.op === "isValid" ? this.expectIsValid
-        : this.op === "winner" ? this.expectWinner
-          : this.expectPlay
-    );
+    const ntc: TestCase = 
+        this.op === "isValid" ? {id: this.id, op: this.op, comment: this.comment, params: [this.state], expect: this.expectIsValid}
+        : this.op === "winner" ? {id: this.id, op: this.op, comment: this.comment, params: [this.state], expect: this.expectWinner}
+          : { 
+              id: this.id, op: this.op, comment: this.comment, 
+              params: [this.state, this.playColumn], 
+              expect: this.expectPlaySuccess ? {success: true, state: this.expectPlaySuccessState} : {success: false, reason: this.expectPlayFailureReason}
+            }
+
+    this.dialogRef.close( ntc );
   }
 
   cancel() {

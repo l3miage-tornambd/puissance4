@@ -1,5 +1,7 @@
 import { GAME_STATE } from "./grid";
 
+export type PLAY_SUCCESS = Readonly<{success: true, state: GAME_STATE}>;
+export type PLAY_FAILURE = Readonly<{success: false, reason: "no such column" | "game is over" | "column is full"}>;
 
 /**
  * 
@@ -10,8 +12,6 @@ import { GAME_STATE } from "./grid";
  * @returns {success: false, reason: "game is over"} if the game has a winner or is drawn.
  * @returns {success: false, reason: "column is full"} if the column already have 6 tokens.
  */
- export function play(state: GAME_STATE, column: number): Readonly<{success: true, state: GAME_STATE}>
-                                                        | Readonly<{success: false, reason: "no such column" | "game is over" | "column is full"}>
-{
+ export function play(state: GAME_STATE, column: number): PLAY_SUCCESS | PLAY_FAILURE {
     return { success: true, state };
 }

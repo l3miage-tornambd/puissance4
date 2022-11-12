@@ -102,6 +102,16 @@
             ],
             "scripts": []
           }
+        },
+        "deploy": {
+          "builder": "@angular/fire:deploy",
+          "options": {
+            "prerender": false,
+            "ssr": false,
+            "browserTarget": "l3m-va-puissance4-2023:build:production",
+            "firebaseProject": "l3m-va-puissance4-2023",
+            "firebaseHostingSite": "l3m-va-puissance4-2023"
+          }
         }
       }
     }

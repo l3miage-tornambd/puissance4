@@ -18,6 +18,10 @@ import {MatInputModule} from '@angular/material/input';
 import {MatMenuModule} from '@angular/material/menu';
 import { EditTestCaseComponent } from './edit-test-case/edit-test-case.component';
 import {MatSelectModule} from '@angular/material/select';
+import { initializeApp,provideFirebaseApp } from '@angular/fire/app';
+import { environment } from '../environments/environment';
+import { provideAuth,getAuth } from '@angular/fire/auth';
+import { provideFirestore,getFirestore } from '@angular/fire/firestore';
 
 
 @NgModule({
@@ -39,7 +43,7 @@ import {MatSelectModule} from '@angular/material/select';
     BrowserAnimationsModule,
     MatButtonModule, MatIconModule,
     MatDialogModule, MatInputModule,
-    MatMenuModule, MatSelectModule,
+    MatMenuModule, MatSelectModule, provideFirebaseApp(() => initializeApp(environment.firebase)), provideAuth(() => getAuth()), provideFirestore(() => getFirestore()),
   ],
   providers: [],
   bootstrap: [AppComponent]

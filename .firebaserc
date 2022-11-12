@@ -1,0 +1,14 @@
+{
+  "targets": {
+    "l3m-va-puissance4-2023": {
+      "hosting": {
+        "l3m-va-puissance4-2023": [
+          "l3m-va-puissance4-2023"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "default": "l3m-va-puissance4-2023"
+  }
+}

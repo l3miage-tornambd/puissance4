@@ -1,18 +1,22 @@
-<h2 mat-dialog-title>Test case</h2>
+<h2 mat-dialog-title>
+    Test case for 
+    <mat-form-field appearance="fill">
+        <mat-label>Operation</mat-label>
+        <mat-select [(ngModel)]="op" name="operation">
+          <mat-option *ngFor="let operation of operations" [value]="operation">
+            {{operation}}
+          </mat-option>
+        </mat-select>
+    </mat-form-field>
+</h2>
 
 <mat-dialog-content>
     <form>
-        <mat-form-field appearance="fill">
-            <mat-label>Operation</mat-label>
-            <mat-select [(ngModel)]="op" name="operation">
-              <mat-option *ngFor="let operation of operations" [value]="operation">
-                {{operation}}
-              </mat-option>
-            </mat-select>
+        <mat-form-field appearance="fill" class="block">
+            <mat-label>Comment</mat-label>
+            <textarea [(ngModel)]="comment" name="comment" matInput placeholder="Comment test case"></textarea>
         </mat-form-field>
-
         <section class="params">
-            <label>State</label>
             <app-game-state [state]="state" [editable]="true"></app-game-state>
             <mat-form-field appearance="fill" *ngIf="op === 'play'">
                 <mat-label>Column</mat-label>
@@ -42,10 +46,31 @@
                     </mat-form-field>
                 </ng-container>
                 <ng-container *ngSwitchCase="'winner'">
-
+                    <mat-form-field appearance="fill">
+                        <mat-label>reason</mat-label>
+                        <mat-select [(ngModel)]="expectWinner" name="expectWinnerValues">
+                          <mat-option *ngFor="let winner of expectWinnerValues" [value]="expectWinner">
+                            {{winner}}
+                          </mat-option>
+                        </mat-select>
+                    </mat-form-field>
                 </ng-container>
                 <ng-container *ngSwitchCase="'play'">
-
+                    <mat-form-field appearance="fill">
+                        <mat-label>valid</mat-label>
+                        <mat-select [(ngModel)]="expectPlaySuccess" name="expectPlaySuccess">
+                          <mat-option [value]="true">true</mat-option>
+                          <mat-option [value]="false">false</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" *ngIf="!expectPlaySuccess">
+                        <mat-label>reason</mat-label>
+                        <mat-select [(ngModel)]="expectPlayFailureReason" name="expectPlayFailureReason">
+                          <mat-option *ngFor="let reason of expectPlay_allReasons" [value]="reason">
+                            {{reason}}
+                          </mat-option>
+                        </mat-select>
+                    </mat-form-field>
                 </ng-container>
             </ng-container>
         </section>
