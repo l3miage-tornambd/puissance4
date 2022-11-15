@@ -5,6 +5,9 @@ import { getEmptyGrid } from 'src/data/grid';
 import { isValid } from "src/data/isValid"
 import { play } from 'src/data/play';
 import { winner } from 'src/data/winner';
+import { Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "@angular/fire/auth"
+
+const googleProvider = new GoogleAuthProvider();
 
 export type TestCase = Readonly<{id: string, op: "isValid", comment: string, params: Parameters<typeof isValid>, expect: ReturnType<typeof isValid>}>
                      | Readonly<{id: string, op: "winner", comment: string, params: Parameters<typeof winner>, expect: ReturnType<typeof winner>}>
@@ -47,7 +50,7 @@ export class DataService {
     shareReplay(1)
   );
 
-  constructor() {
+  constructor(private auth: Auth) {
     this.testSuitesBS.next([
       {
         id: "ts::1",
@@ -59,6 +62,20 @@ export class DataService {
         ]
       }
     ]);
+  }
+
+  async logout() {
+    return this.auth.signOut();
+  }
+
+  async loginGoogle() {
+    return signInWithPopup(this.auth, googleProvider);
+  }
+
+  async login({ email, password }: Partial<{email: string | null, password: string | null}>) {
+    if (email && password) {
+      await signInWithEmailAndPassword(this.auth, email, password);
+    }
   }
 
   async appendTestSuite(label: string) {

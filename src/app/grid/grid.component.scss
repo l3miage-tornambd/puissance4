@@ -27,3 +27,25 @@ table {
     }
 
 }
+
+table.editable {
+    td.isHover {
+        background-color: green;
+        border: green;
+    }
+}
+
+section.player {
+    table {
+        border: none;
+
+        td {
+            border: none;
+            background-color: white;
+        }
+
+        td.selected div {
+            border-width: 2px;
+        }
+    }
+}

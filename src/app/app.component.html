@@ -1,5 +1,20 @@
 <mat-toolbar color="primary">
   <label>TP L3M VA : Puissance 4</label>
+  <span class="expand"></span>
+  <button mat-raised-button *ngIf="userObs | async as U; else login" [matMenuTriggerFor]="menuConnect">
+    {{U.email}}
+  </button>
+  <ng-template #login>
+    <button mat-raised-button (click)="loginStudent()">Login</button>
+  </ng-template>
 </mat-toolbar>
 
 <router-outlet></router-outlet>
+
+
+<mat-menu #menuConnect="matMenu">
+  <button mat-menu-item (click)="logout()">
+    <mat-icon>exit_to_app</mat-icon>
+    <span>logout</span>
+  </button>
+</mat-menu>

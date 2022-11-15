@@ -1,9 +1,23 @@
-<table>
+<table [class.editable]="editable">
     <tbody>
         <tr *ngFor="let nbL of lines">
-            <td *ngFor="let col of columns(nbL)" [class]="col">
+            <td *ngFor="let col of columns(nbL); index as i" [class]="col"
+                (click)="play(i)"
+                (pointerenter) = "hover = i"
+                (pointerleave) = "hover = -1"
+                [class.isHover] = "i === hover"
+                >
                 <div></div>
             </td>
         </tr>
     </tbody>
 </table>
+<section *ngIf="editable" class="player">
+    <label>Player</label>
+    <table>
+        <tr>
+            <td class="P1" (click)="currentTurn = 'P1'" [class.selected]="currentTurn === 'P1'"><div></div></td>
+            <td class="P2" (click)="currentTurn = 'P2'" [class.selected]="currentTurn === 'P2'"><div></div></td>
+        </tr>
+    </table>
+</section>

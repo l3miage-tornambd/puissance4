@@ -2,7 +2,7 @@ import { Component, OnInit, Inject, ChangeDetectionStrategy } from '@angular/cor
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { GAME_STATE } from 'src/data/grid';
 import { isValid } from 'src/data/isValid';
-import { play, PLAY_FAILURE } from 'src/data/play';
+import { PLAY_FAILURE } from 'src/data/play';
 import { winner } from 'src/data/winner';
 import { TestCase } from '../data.service';
 
@@ -48,6 +48,7 @@ export class EditTestCaseComponent implements OnInit {
   expectPlaySuccess: boolean;
   expectPlaySuccessState: GAME_STATE;
   expectPlayFailureReason: PLAY_FAILURE["reason"];
+  expectNewState: GAME_STATE;
 
   constructor(private dialogRef: MatDialogRef<EditTestCaseComponent>, @Inject(MAT_DIALOG_DATA) public test: TestCase) {
     this.comment = test.comment;
@@ -60,6 +61,11 @@ export class EditTestCaseComponent implements OnInit {
     this.expectPlaySuccess = test.op === "play" ? test.expect.success : false;
     this.expectPlaySuccessState = test.op === "play" && test.expect.success ? test.expect.state : test.params[0];
     this.expectPlayFailureReason = test.op === "play" && !test.expect.success ? test.expect.reason : "no such column";
+    if (test.op === "play" && test.expect.success) {
+      this.expectNewState = test.expect.state;
+    } else {
+      this.expectNewState = {...test.params[0], turn: test.params[0].turn === "P1" ? "P2" : "P1"};
+    }
   }
 
   ngOnInit(): void {

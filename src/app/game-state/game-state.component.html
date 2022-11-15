@@ -1,8 +1,15 @@
-<ng-container *ngIf="editable; noEdit">
-
+<ng-container *ngIf="editable; else noEdit">
+    <mat-form-field appearance="fill">
+        <mat-label>Turn</mat-label>
+        <mat-select matNativeControl required [value]="state.turn" (valueChange)="updateTurn($event)">
+            <mat-option value="P1">Player 1</mat-option>
+            <mat-option value="P2">Player 2</mat-option>
+        </mat-select>
+    </mat-form-field>
 </ng-container>
 
-<ng-container #noEdit>
-    Turn: {{state.turn}}
-    <app-grid [grid]="state.grid" [editable]="editable"></app-grid>
-</ng-container>
+<ng-template #noEdit>
+    <label>Turn: {{state.turn}}</label>
+</ng-template>
+
+<app-grid [grid]="state.grid" [editable]="editable"></app-grid>

@@ -63,7 +63,8 @@
                           <mat-option [value]="false">false</mat-option>
                         </mat-select>
                     </mat-form-field>
-                    <mat-form-field appearance="fill" *ngIf="!expectPlaySuccess">
+                    <ng-container *ngIf="!expectPlaySuccess; else playSuccess">
+                      <mat-form-field appearance="fill">
                         <mat-label>reason</mat-label>
                         <mat-select [(ngModel)]="expectPlayFailureReason" name="expectPlayFailureReason">
                           <mat-option *ngFor="let reason of expectPlay_allReasons" [value]="reason">
@@ -71,6 +72,10 @@
                           </mat-option>
                         </mat-select>
                     </mat-form-field>
+                  </ng-container>
+                  <ng-template #playSuccess>
+                    <app-game-state [state]="state" [editable]="true"></app-game-state>
+                  </ng-template>
                 </ng-container>
             </ng-container>
         </section>
