@@ -24,6 +24,9 @@ import { provideAuth,getAuth } from '@angular/fire/auth';
 import { provideFirestore,getFirestore } from '@angular/fire/firestore';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import { PlayComponent } from './play/play.component';
+import {MatSidenavModule} from '@angular/material/sidenav';
+import { ServerTestsComponent } from './server-tests/server-tests.component';
 
 
 @NgModule({
@@ -37,6 +40,8 @@ import {MatAutocompleteModule} from '@angular/material/autocomplete';
     DialogEditTestSuiteLabel,
     EditTestCaseComponent,
     DialogStudentLogin,
+    PlayComponent,
+    ServerTestsComponent,
   ],
   imports: [
     BrowserModule,
@@ -47,6 +52,7 @@ import {MatAutocompleteModule} from '@angular/material/autocomplete';
     MatButtonModule, MatIconModule,
     MatDialogModule, MatInputModule,
     MatDividerModule, MatAutocompleteModule,
+    MatSidenavModule,
     MatMenuModule, MatSelectModule, provideFirebaseApp(() => initializeApp(environment.firebase)), provideAuth(() => getAuth()), provideFirestore(() => getFirestore()),
   ],
   providers: [],

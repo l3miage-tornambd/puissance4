@@ -5,19 +5,32 @@
                 (click)="play(i)"
                 (pointerenter) = "hover = i"
                 (pointerleave) = "hover = -1"
-                [class.isHover] = "i === hover"
+                [class.isHover] = "i === hover && grid[i].length < 6"
                 >
                 <div></div>
             </td>
         </tr>
     </tbody>
 </table>
-<section *ngIf="editable" class="player">
-    <label>Player</label>
+<section class="player">
+    <label>{{nbP1}}</label>
     <table>
-        <tr>
-            <td class="P1" (click)="currentTurn = 'P1'" [class.selected]="currentTurn === 'P1'"><div></div></td>
-            <td class="P2" (click)="currentTurn = 'P2'" [class.selected]="currentTurn === 'P2'"><div></div></td>
-        </tr>
+      <tr>
+        <td class="P1" (click)="currentTurn = 'P1'" [class.selected]="editable && currentTurn === 'P1'"><div></div></td>
+      </tr>
     </table>
+    &nbsp;
+    <label>{{nbP2}}</label>
+    <table>
+      <tr>
+        <td class="P2" (click)="currentTurn = 'P2'" [class.selected]="editable && currentTurn === 'P2'"><div></div></td>
+      </tr>
+    </table>
+    &nbsp;
+  x
+  <table>
+    <tr>
+      <td (click)="currentTurn = 'DEL'" [class.selected]="editable && currentTurn === 'DEL'"><div></div></td>
+    </tr>
+  </table>
 </section>

@@ -1,11 +1,35 @@
-import { Injectable } from '@angular/core';
+import {Injectable, OnDestroy} from '@angular/core';
 import * as deepEqual from 'fast-deep-equal';
-import { BehaviorSubject, map, Observable, of, shareReplay, tap } from 'rxjs';
-import { getEmptyGrid } from 'src/data/grid';
+import {
+  BehaviorSubject,
+  combineLatest,
+  map,
+  Observable,
+  of,
+  shareReplay,
+  Subject,
+  Subscription,
+  switchMap,
+  tap
+} from 'rxjs';
 import { isValid } from "src/data/isValid"
 import { play } from 'src/data/play';
 import { winner } from 'src/data/winner';
-import { Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "@angular/fire/auth"
+import {Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, User} from "@angular/fire/auth"
+import {
+  Firestore,
+  collection,
+  doc,
+  docData,
+  collectionData,
+  query,
+  QuerySnapshot,
+  CollectionReference,
+  addDoc,
+  updateDoc, deleteDoc, WithFieldValue
+} from "@angular/fire/firestore";
+import {FirestoreDataConverter} from "@firebase/firestore";
+import {GAME_STATE} from "../data/grid";
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -36,32 +60,85 @@ function evalTestLocally(t: TestCase): TestCaseResult {
   return {...tcr, pass: deepEqual(tcr.expect, tcr.result)};
 }
 
+interface FS_TestSuite {
+  id: string;
+  label: string;
+  LtestIds: string[];
+}
+interface FS_TestCase {
+
+}
+
+const TestSuiteConverter: FirestoreDataConverter<FS_TestSuite> = {
+  toFirestore: ts => ts,
+  fromFirestore: d => d.data() as FS_TestSuite,
+}
+const TestCaseConverter: FirestoreDataConverter<TestCase> = {
+  toFirestore: tc => {
+    const obj: any = {...tc};
+    if (tc.params) {
+      obj['params'] = JSON.stringify(tc.params)
+    }
+    const expectPlay = tc.expect as ReturnType<typeof play>;
+    if ( expectPlay.success ) { //if defined as true
+      obj['expect']['state'] = JSON.stringify( expectPlay.state );
+    }
+    console.log("pushing to FireStore", obj)
+    return obj;
+  },
+  fromFirestore: d => {
+    const data = d.data();
+    if ( data['expect']?.['state'] ) { //if defined as true
+      data['expect']['state'] = JSON.parse( data['expect']['state'] );
+    }
+    return {...data, params: JSON.parse(data['params'])} as TestCase
+  },
+};
+
 
 @Injectable({
   providedIn: 'root'
 })
-export class DataService {
+export class DataService implements OnDestroy {
+  private userSubj = new BehaviorSubject<User | null>(null);
   private testSuitesBS = new BehaviorSubject<readonly TestSuite[]>([]);
-  readonly testSuites = this.testSuitesBS.asObservable();
-  readonly localTestsSuitesResults: Observable<TestSuiteResults[]> = this.testSuites.pipe(
-    tap( Lts => console.log("Lts =", Lts) ),
-    map( Lts => Lts.map( ts => ({...ts, tests: ts.tests.map( evalTestLocally ) }) )
-    ),
-    shareReplay(1)
-  );
+  readonly testSuites: Observable<readonly TestSuite[]> = this.testSuitesBS.asObservable();
+  readonly localTestsSuitesResults: Observable<readonly TestSuiteResults[]>;
+  private collectionSuites?: CollectionReference<FS_TestSuite>;
+  private collectionTests?: CollectionReference<TestCase>;
+  private subscription: Subscription;
 
-  constructor(private auth: Auth) {
-    this.testSuitesBS.next([
-      {
-        id: "ts::1",
-        label: "tests for isValid",
-        tests: [
-          {id: "tc::1", op: "play", comment: "play at 3 on empty grid is OK if P1 turn", params: [{grid: getEmptyGrid(), turn: "P1"}, 1], expect: {success: true, state: {grid: [[], [], ["P1"], [], [], [], []], turn: "P2"}}},
-          {id: "tc::2", op: "isValid", comment: "empty grid is not OK if P2 turn", params: [{grid: getEmptyGrid(), turn: "P2"}], expect: {valid: false, reason: "not the turn of P2"}},
-          {id: "tc::3", op: "isValid", comment: "2 tokens P1 and a token P2 => not the turn of P1", params: [{grid: [[], [], [], ["P1", "P1"], ["P2"], [], []], turn: "P1"}], expect: {valid: false, reason: "not the turn of P1"}},
-        ]
-      }
-    ]);
+  constructor(private auth: Auth, private fs: Firestore) {
+    auth.onAuthStateChanged(this.userSubj);
+    this.subscription = this.userSubj.pipe(
+      // Avoir aussi une zone de stockage possible dans des fichiers ???
+      switchMap( u => {
+        if (!u) return of([] as TestSuite[]);
+        this.collectionSuites = collection(this.fs, `users/${u.email}/suites`).withConverter(TestSuiteConverter);
+        this.collectionTests  = collection(this.fs, `users/${u.email}/tests`).withConverter(TestCaseConverter);
+        const obsLts = collectionData( query(this.collectionSuites), {idField: "id"} );
+        return obsLts.pipe(
+          switchMap( Lts => combineLatest(Lts.map( ts => {
+            const Ltc = ts.LtestIds.map( tcid => docData(doc(this.fs, `users/${u.email}/tests/${tcid}`).withConverter(TestCaseConverter), {idField: "id"}) );
+            return Ltc.length === 0 ? of({id: ts.id, label: ts.label, tests: []}) : combineLatest(Ltc).pipe( map(tests => ({
+              id: ts.id,
+              label: ts.label,
+              tests,
+            })) );
+          })))
+        )
+      })
+    ).subscribe( this.testSuitesBS );
+    this.localTestsSuitesResults = this.testSuites.pipe(
+      tap( Lts => console.log("Lts =", Lts) ),
+      map( Lts => Lts.map( ts => ({...ts, tests: ts.tests.map( evalTestLocally ) }) )
+      ),
+      shareReplay(1)
+    );
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
   }
 
   async logout() {
@@ -79,50 +156,56 @@ export class DataService {
   }
 
   async appendTestSuite(label: string) {
-    const L = this.testSuitesBS.value;
-    this.testSuitesBS.next([...L, {id: Date.now().toString(), label, tests: []}]);
+    const ts: FS_TestSuite = {id: "pipo", label, LtestIds: []};
+    if (this.collectionSuites) {
+      addDoc(this.collectionSuites, ts);
+    }
   }
 
   async removeTestSuite(suite: TestSuite) {
-    const L = this.testSuitesBS.value;
-    this.testSuitesBS.next( L.filter(ts => ts.id !== suite.id) );
+    if (this.auth.currentUser?.email) {
+      return deleteDoc( doc(this.fs,`users/${this.auth.currentUser.email}/suites/${suite.id}`) )
+    }
   }
 
   async updatetestSuiteLabel(suite: TestSuite, label: string) {
-    const L = this.testSuitesBS.value;
-    this.testSuitesBS.next( L.map(ts => ts.id !== suite.id ? ts : {...suite, label} ) );
+    if (this.auth.currentUser?.email) {
+      return updateDoc( doc(this.fs,`users/${this.auth.currentUser.email}/suites/${suite.id}`).withConverter(TestSuiteConverter), {label} )
+    }
   }
 
   async updateTestCase(testCase: TestCase) {
-    const L = this.testSuitesBS.value;
-    this.testSuitesBS.next(
-      L.map( ts => {
-        // Is the original here ?
-        if (ts.tests.find( tc => tc.id === testCase.id)) {
-          return {...ts, tests: ts.tests.map( tc => tc.id !== testCase.id ? tc : testCase) }
-        }
-        return ts;
-      })
-    );
+    if (this.auth.currentUser?.email) {
+      return updateDoc<TestCase>( doc(this.fs,`users/${this.auth.currentUser.email}/tests/${testCase.id}`).withConverter(TestCaseConverter), TestCaseConverter.toFirestore(testCase) )
+    }
   }
 
   async appendTestCase(suite: TestSuite, tc: TestCase) {
-    const L = this.testSuitesBS.value;
-    this.testSuitesBS.next(
-      L.map( ts => ts.id !== suite.id ? ts : {...ts, tests: [...ts.tests, tc]} )
-    );
+    if (this.collectionTests && this.auth.currentUser) {
+      const ref = await addDoc( this.collectionTests, tc );
+      const up: Partial<FS_TestSuite> = {LtestIds: [...suite.tests.map( tc => tc.id ), ref.id]};
+      return updateDoc(
+        doc(this.fs, `users/${this.auth.currentUser.email}/suites/${suite.id}`).withConverter(TestSuiteConverter),
+        up
+      );
+    }
   }
 
-  async removeTestCase(tcr: TestCase) {
-    const L = this.testSuitesBS.value;
-    this.testSuitesBS.next(
-      L.map( ts => {
-        if (ts.tests.find( tc => tc.id === tcr.id )) {
-          return {...ts, tests: ts.tests.filter( tc => tc.id !== tcr.id ) }
-        }
-        return ts;
-      })
-    );
+  async removeTestCase(testCase: TestCase) {
+    if (this.auth.currentUser?.email) {
+      const email: string = this.auth.currentUser?.email;
+      const d = doc(this.fs, `users/${email}/tests/${testCase.id}`);
+      // Remove d from suites
+      const L = this.testSuitesBS.value.filter( ts => ts.tests.find( tc => tc.id === testCase.id) );
+      await Promise.all(
+        L.map( ts => updateDoc(
+          doc(this.fs, `users/${email}/suites/${ts.id}`).withConverter(TestSuiteConverter),
+          {LtestIds: ts.tests.filter(tc => tc.id !== testCase.id).map(tc => tc.id)}
+        ) )
+      )
+      // Remove testcase
+      await deleteDoc(d)
+    }
   }
 
 }

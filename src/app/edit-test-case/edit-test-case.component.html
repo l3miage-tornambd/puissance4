@@ -1,5 +1,5 @@
 <h2 mat-dialog-title>
-    Test case for 
+    Test case for
     <mat-form-field appearance="fill">
         <mat-label>Operation</mat-label>
         <mat-select [(ngModel)]="op" name="operation">
@@ -17,7 +17,7 @@
             <textarea [(ngModel)]="comment" name="comment" matInput placeholder="Comment test case"></textarea>
         </mat-form-field>
         <section class="params">
-            <app-game-state [state]="state" [editable]="true"></app-game-state>
+            <app-game-state [state]="state" [editable]="true" (update)="state = $event"></app-game-state>
             <mat-form-field appearance="fill" *ngIf="op === 'play'">
                 <mat-label>Column</mat-label>
                 <input matInput type="number" name="playColumn" placeholder="Column" [(ngModel)]="playColumn">
@@ -74,7 +74,7 @@
                     </mat-form-field>
                   </ng-container>
                   <ng-template #playSuccess>
-                    <app-game-state [state]="state" [editable]="true"></app-game-state>
+                    <app-game-state [state]="expectNewState" [editable]="true" (update)="expectNewState = $event"></app-game-state>
                   </ng-template>
                 </ng-container>
             </ng-container>

@@ -1,0 +1,26 @@
+<label class="player">
+  <label >Player {{state.turn === "P1" ? "1" : "2"}}</label>
+  <div [class]="state.turn"></div>
+</label>
+
+<table>
+  <tbody>
+  <tr *ngFor="let nbL of lines">
+    <td *ngFor="let col of columns(nbL); index as i" [class]="col"
+        (click)="play(i)"
+        (pointerenter) = "hover = i"
+        (pointerleave) = "hover = -1"
+        [class.isHover] = "i === hover && state.grid[i].length < 6"
+    >
+      <div></div>
+    </td>
+  </tr>
+  </tbody>
+</table>
+<hr/>
+<pre class="winner">{{winner}}</pre>
+<hr/>
+<pre class="error" *ngIf="validity">vaidity problem : {{validity}}</pre>
+<hr/>
+<pre class="error" *ngIf="error">error: {{error}}</pre>
+<hr/>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DataService, TestCase, TestCaseResult } from '../data.service';
 import { EditTestCaseComponent } from '../edit-test-case/edit-test-case.component';
@@ -12,6 +12,11 @@ import { firstValueFrom } from "rxjs";
 })
 export class TestCaseComponent implements OnInit {
   @Input() test!: TestCase | TestCaseResult;
+  private _details = false;
+  @Input()
+  get details(): boolean {return this._details}
+  set details(d: boolean) {this._details = d; this.detailsChange.emit(d)}
+  @Output() detailsChange = new EventEmitter<boolean>();
 
   constructor(private dataService: DataService, private dialog: MatDialog) { }
 

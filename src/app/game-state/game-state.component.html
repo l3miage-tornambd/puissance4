@@ -1,3 +1,7 @@
+<button mat-icon-button [matMenuTriggerFor]="menu">
+  <mat-icon>more_vert</mat-icon>
+</button>
+
 <ng-container *ngIf="editable; else noEdit">
     <mat-form-field appearance="fill">
         <mat-label>Turn</mat-label>
@@ -12,4 +16,15 @@
     <label>Turn: {{state.turn}}</label>
 </ng-template>
 
-<app-grid [grid]="state.grid" [editable]="editable"></app-grid>
+<app-grid [grid]="state.grid" [editable]="editable" (update)="updateGrid($event)"></app-grid>
+
+<mat-menu #menu="matMenu">
+  <button mat-menu-item (click)="copy()">
+    <mat-icon>file_copy</mat-icon>
+    <span>Copy</span>
+  </button>
+  <button mat-menu-item [disabled]="!canPaste" (click)="paste()">
+    <mat-icon>paste</mat-icon>
+    <span>Paste</span>
+  </button>
+</mat-menu>

@@ -2,8 +2,9 @@ import { Component, ChangeDetectionStrategy} from '@angular/core';
 import { Auth, sendPasswordResetEmail, User } from '@angular/fire/auth';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { BehaviorSubject, firstValueFrom, map, Observable } from 'rxjs';
+import {BehaviorSubject, filter, firstValueFrom, map, Observable, shareReplay} from 'rxjs';
 import { DataService } from './data.service';
+import {Navigation, NavigationEnd, Router} from "@angular/router";
 
 @Component({
   selector: 'app-root',
@@ -12,10 +13,26 @@ import { DataService } from './data.service';
 })
 export class AppComponent {
   private userSubj = new BehaviorSubject<User | null>( null );
-  userObs: Observable<User | null> = this.userSubj.asObservable();
-  
-  constructor(private dialog: MatDialog, private auth: Auth, private dataS: DataService) {
+  readonly userObs: Observable<User | null> = this.userSubj.asObservable();
+  readonly obsCurrentRoute: Observable<string>;
+  readonly routes: {label: string, url: string}[] = [
+    {label: "Play", url: "/play"},
+    {label: "Local tests", url: "/local-tests"},
+    {label: "Server tests", url: "/server-tests"},
+  ]
+
+  constructor(
+    private dialog: MatDialog,
+    private auth: Auth,
+    private dataS: DataService,
+    private router: Router,
+  ) {
     auth.onAuthStateChanged( this.userSubj );
+    this.obsCurrentRoute = router.events.pipe(
+      filter( e => e instanceof NavigationEnd ),
+      map( e => (e as NavigationEnd).url ),
+      shareReplay(1)
+    )
   }
 
   async loginStudent() {
@@ -107,11 +124,11 @@ export class DialogStudentLogin {
     map(v => (v.email ?? "").toLowerCase() ),
     map( s => this.loginOptions.indexOf(s) >= 0 )
   );
-  
+
   constructor(
     public dialogRef: MatDialogRef<DialogStudentLogin, void>,
     private dataS: DataService,
-    private auth: Auth, 
+    private auth: Auth,
   ) {
     this.filteredLoginOptions = this.fg.valueChanges.pipe(
       map(v => (v.email ?? "").toLowerCase() ),

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { GAME_STATE, GRID, PLAYER } from 'src/data/grid';
+import {COLUMN, GAME_STATE, GRID, PLAYER} from 'src/data/grid';
 
-function* genNb(nb: number) {
+export function* genNb(nb: number) {
   for (let i = 0; i < nb; i++) {
     yield nb - i - 1;
   }
@@ -17,7 +17,7 @@ export class GridComponent implements OnInit {
   @Input() grid!: GRID;
   @Input() editable = false;
   @Output() update = new EventEmitter<GRID>();
-  currentTurn: GAME_STATE["turn"] = "P1";
+  currentTurn: GAME_STATE["turn"] | "DEL" = "P1";
   hover: number = -1;
 
   constructor() { }
@@ -34,9 +34,41 @@ export class GridComponent implements OnInit {
   }
 
   play(col: number) {
-    if (this.editable) {
-      console.log("play at column", col)
+    if (this.editable && this.grid[col]?.length < 6) {
+      if (this.currentTurn === "DEL") {
+        this.update.emit(
+          this.grid.map((L, i) => {
+            if (i !== col) {
+              return L;
+            } else {
+              const nL = [...L];
+              nL.pop();
+              return nL;
+            }
+          }) as unknown as GRID
+        )
+      } else {
+        // Publish a new grid
+        this.update.emit(
+          this.grid.map((L, i) => i !== col ? L : [...L, this.currentTurn]) as unknown as GRID
+        )
+        this.currentTurn = this.currentTurn === "P1" ? "P2" : "P1";
+      }
     }
   }
 
+  get nbP1(): number {
+    return this.nb("P1")
+  }
+
+  get nbP2(): number {
+    return this.nb("P2")
+  }
+
+  private nb(p: GAME_STATE["turn"]): number {
+    return this.grid.reduce(
+      (nb, L) => nb + L.reduce( (n, c) => c === p ? 1 + n : n, 0)
+      , 0
+    )
+  }
 }

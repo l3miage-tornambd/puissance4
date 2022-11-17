@@ -16,7 +16,7 @@ export class LocalTestsComponent implements OnInit {
   ngOnInit(): void {
   }
 
-  get localTestsSuitesResults(): Observable<TestSuiteResults[]> {
+  get localTestsSuitesResults(): Observable<readonly TestSuiteResults[]> {
     return this.dataService.localTestsSuitesResults;
   }
 

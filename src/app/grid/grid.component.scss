@@ -6,6 +6,8 @@ table {
 
     td {
         background-color: lightgrey;
+        min-width: $W;
+        min-height: $W;
         width: $W;
         height: $W;
 
@@ -38,6 +40,7 @@ table.editable {
 section.player {
     table {
         border: none;
+        display: inline-block;
 
         td {
             border: none;

@@ -1,4 +1,7 @@
 <mat-toolbar color="primary">
+  <button mat-button class="menu-button" (click)="sidenav.toggle()">
+    <mat-icon>menu</mat-icon>
+  </button>
   <label>TP L3M VA : Puissance 4</label>
   <span class="expand"></span>
   <button mat-raised-button *ngIf="userObs | async as U; else login" [matMenuTriggerFor]="menuConnect">
@@ -9,7 +12,20 @@
   </ng-template>
 </mat-toolbar>
 
-<router-outlet></router-outlet>
+<mat-sidenav-container>
+  <mat-sidenav #sidenav mode="over" >
+    <a *ngFor="let R of routes"
+       [routerLink]="R.url"
+       (click)="sidenav.close()"
+       [class.current] = "R.url === (obsCurrentRoute | async)"
+    >{{R.label}}</a>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
 
 
 <mat-menu #menuConnect="matMenu">

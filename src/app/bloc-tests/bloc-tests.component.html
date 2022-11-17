@@ -1,11 +1,12 @@
 <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Menu for test suite">
-    <mat-icon>more_vert</mat-icon>
-    <span>{{suite.label}}</span>
+  <mat-icon>more_vert</mat-icon>
 </button>
+<label>{{label}}</label>
+<label (click) = "details = !details">{{details ? "▼" : "▶"}}</label>
 
 <ol>
-    <li *ngFor="let tc of suite.tests">
-        <app-test-case [test] = "tc"></app-test-case>
+    <li *ngFor="let tc of suite.tests; index as i">
+        <app-test-case [test] = "tc" [(details)]="Ldetails[i]"></app-test-case>
     </li>
 </ol>
 
@@ -19,7 +20,7 @@
         <mat-icon>playlist_add</mat-icon>
         <span>Add test case</span>
     </button>
-        
+
     <hr/>
     <button mat-menu-item color="warn" (click)="removeTestSuite()">
       <mat-icon>delete</mat-icon>

@@ -43,10 +43,9 @@ export class EditTestCaseComponent implements OnInit {
   comment = ""
 
   playColumn: number;
-  expectIsValid: Mutable< ReturnType<typeof isValid> >; 
+  expectIsValid: Mutable< ReturnType<typeof isValid> >;
   expectWinner:  Mutable< ReturnType<typeof winner> >;
   expectPlaySuccess: boolean;
-  expectPlaySuccessState: GAME_STATE;
   expectPlayFailureReason: PLAY_FAILURE["reason"];
   expectNewState: GAME_STATE;
 
@@ -59,7 +58,6 @@ export class EditTestCaseComponent implements OnInit {
     this.expectIsValid = test.op === "isValid" ? {...test.expect} : {valid: true};
     this.expectWinner = test.op === "winner" ? test.expect : "no winner yet";
     this.expectPlaySuccess = test.op === "play" ? test.expect.success : false;
-    this.expectPlaySuccessState = test.op === "play" && test.expect.success ? test.expect.state : test.params[0];
     this.expectPlayFailureReason = test.op === "play" && !test.expect.success ? test.expect.reason : "no such column";
     if (test.op === "play" && test.expect.success) {
       this.expectNewState = test.expect.state;
@@ -76,13 +74,13 @@ export class EditTestCaseComponent implements OnInit {
   }
 
   ok() {
-    const ntc: TestCase = 
+    const ntc: TestCase =
         this.op === "isValid" ? {id: this.id, op: this.op, comment: this.comment, params: [this.state], expect: this.expectIsValid}
         : this.op === "winner" ? {id: this.id, op: this.op, comment: this.comment, params: [this.state], expect: this.expectWinner}
-          : { 
-              id: this.id, op: this.op, comment: this.comment, 
-              params: [this.state, this.playColumn], 
-              expect: this.expectPlaySuccess ? {success: true, state: this.expectPlaySuccessState} : {success: false, reason: this.expectPlayFailureReason}
+          : {
+              id: this.id, op: this.op, comment: this.comment,
+              params: [this.state, this.playColumn],
+              expect: this.expectPlaySuccess ? {success: true, state: this.expectNewState} : {success: false, reason: this.expectPlayFailureReason}
             }
 
     this.dialogRef.close( ntc );

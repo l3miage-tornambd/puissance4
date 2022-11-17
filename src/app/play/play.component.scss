@@ -1,0 +1,67 @@
+$W: 32px;
+$P1: red;
+$P2: yellow;
+
+:host {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+
+  > label.player {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    margin-top: 1em;
+    margin-bottom: 1em;
+
+    div {
+      margin-left: 1em;
+      width: $W;
+      height: $W;
+      border: solid black 1px;
+      border-radius: 50%;
+    }
+
+    div.P1 {
+      background-color: $P1;
+    }
+    div.P2 {
+      background-color: $P2;
+    }
+  }
+
+  table {
+    border-collapse: collapse;
+    border: solid black 2px;
+
+    td {
+      background-color: lightgrey;
+      min-width: $W;
+      min-height: $W;
+      width: $W;
+      height: $W;
+
+      > div {
+        border: solid black 1px;
+        border-radius: 50%;
+        width: 90%;
+        height: 90%;
+        background-color: white;
+      }
+    }
+
+    td.isHover {
+      background-color: green;
+      border: green;
+    }
+
+    td.P1 > div {
+      background-color: $P1;
+    }
+
+    td.P2 > div {
+      background-color: $P2;
+    }
+
+  }
+}
