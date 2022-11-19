@@ -47,9 +47,9 @@
                 </ng-container>
                 <ng-container *ngSwitchCase="'winner'">
                     <mat-form-field appearance="fill">
-                        <mat-label>reason</mat-label>
+                        <mat-label>Winner</mat-label>
                         <mat-select [(ngModel)]="expectWinner" name="expectWinnerValues">
-                          <mat-option *ngFor="let winner of expectWinnerValues" [value]="expectWinner">
+                          <mat-option *ngFor="let winner of expectWinnerValues" [value]="winner">
                             {{winner}}
                           </mat-option>
                         </mat-select>

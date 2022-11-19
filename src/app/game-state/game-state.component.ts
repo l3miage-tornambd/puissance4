@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { GAME_STATE } from 'src/data/grid';
-
-let copiedGS: GAME_STATE;
+import {CopypasteService} from "../copypaste.service";
+import {Observable} from "rxjs";
 
 @Component({
   selector: 'app-game-state[state]',
@@ -14,7 +14,7 @@ export class GameStateComponent implements OnInit {
   @Input() state!: GAME_STATE
   @Output() update = new EventEmitter<GAME_STATE>();
 
-  constructor() { }
+  constructor(private cp: CopypasteService) { }
 
   ngOnInit(): void {
   }
@@ -28,16 +28,19 @@ export class GameStateComponent implements OnInit {
   }
 
 
-  get canPaste(): boolean {
-    return !!copiedGS;
+  get canPaste(): Observable<boolean> {
+    return this.cp.canPasteGS
   }
 
   copy() {
-    copiedGS = this.state;
+    this.cp.copyGameState( this.state );
   }
 
   paste() {
-    this.state = copiedGS;
+    const state = this.cp.pasteGameState();
+    if (state) {
+      this.state = state;
+    }
   }
 
 }

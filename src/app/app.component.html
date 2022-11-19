@@ -14,7 +14,7 @@
 
 <mat-sidenav-container>
   <mat-sidenav #sidenav mode="over" >
-    <a *ngFor="let R of routes"
+    <a *ngFor="let R of routes | async"
        [routerLink]="R.url"
        (click)="sidenav.close()"
        [class.current] = "R.url === (obsCurrentRoute | async)"

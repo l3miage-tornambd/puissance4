@@ -1,54 +1,81 @@
 $W: 16px;
+$Bext: solid black 2px;
 
 table {
-    border-collapse: collapse;
-    border: solid black 2px;
+  border-collapse: collapse;
 
+  tr.ontop {
     td {
-        background-color: lightgrey;
-        min-width: $W;
-        min-height: $W;
-        width: $W;
-        height: $W;
-
-        > div {
-            border: solid black 1px;
-            border-radius: 50%;
-            width: 90%;
-            height: 90%;
-            background-color: white;
-        }
+      background-color: white;
     }
 
-    td.P1 > div {
-        background-color: red;
+    td.EMPTY {
+      > div {
+        border: none;
+      }
     }
+  }
 
-    td.P2 > div {
-        background-color: yellow;
+  tr.line6 {
+    border-top: $Bext
+  }
+  tr.line1 {
+    border-bottom: $Bext;
+  }
+  tr.line1, tr.line2, tr.line3, tr.line4, tr.line5, tr.line6 {
+    td:first-child {
+      border-left: $Bext;
     }
+    td:last-child {
+      border-right: $Bext;
+    }
+  }
+
+  td {
+    background-color: lightgrey;
+    min-width: $W;
+    min-height: $W;
+    width: $W;
+    height: $W;
+
+    > div {
+      border: solid black 1px;
+      border-radius: 50%;
+      width: 90%;
+      height: 90%;
+      background-color: white;
+    }
+  }
+
+  td.P1 > div {
+    background-color: red;
+  }
+
+  td.P2 > div {
+    background-color: yellow;
+  }
 
 }
 
 table.editable {
-    td.isHover {
-        background-color: green;
-        border: green;
-    }
+  td.isHover {
+    background-color: green;
+    border: green;
+  }
 }
 
 section.player {
-    table {
-        border: none;
-        display: inline-block;
+  table {
+    border: none;
+    display: inline-block;
 
-        td {
-            border: none;
-            background-color: white;
-        }
-
-        td.selected div {
-            border-width: 2px;
-        }
+    td {
+      border: none;
+      background-color: white;
     }
+
+    td.selected div {
+      border-width: 2px;
+    }
+  }
 }

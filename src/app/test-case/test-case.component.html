@@ -1,13 +1,23 @@
 
 <mat-menu #menu="matMenu">
-    <button mat-menu-item (click)="edit()">
-        <mat-icon>edit</mat-icon>
-        <span>Edit</span>
-    </button>
-    <button mat-menu-item (click)="delete()">
-        <mat-icon>delete</mat-icon>
-        <span>Delete</span>
-    </button>
+  <button mat-menu-item (click)="edit()">
+    <mat-icon>edit</mat-icon>
+    <span>Edit</span>
+  </button>
+  <hr/>
+  <button mat-menu-item (click)="copy()">
+    <mat-icon>file_copy</mat-icon>
+    <span>Copy</span>
+  </button>
+  <button mat-menu-item (click)="duplicate()">
+    <mat-icon>file_copy</mat-icon>
+    <span>Duplicate</span>
+  </button>
+  <hr/>
+  <button mat-menu-item (click)="delete()">
+    <mat-icon>delete</mat-icon>
+    <span>Delete</span>
+  </button>
 </mat-menu>
 
 <label (click) = "details = !details">{{details ? "▼" : "▶"}}</label>
@@ -16,7 +26,6 @@
         <mat-icon>more_vert</mat-icon>
         <label [class]="validClass">{{test.comment}}</label>
     </button>
-
 
     <section class="testcase" *ngIf="details">
         <ng-container [ngSwitch]="test.op">
@@ -36,21 +45,31 @@
         </ng-container>
 
         <ng-container *ngIf="hasResult; else noRes">
-            <label *ngIf="asTestResult.pass; else failureLabel">returns <pre>{{asTestResult.result | json}}</pre></label>
-            <ng-template #failureLabel>returns <pre>{{asTestResult.result | json}}</pre> but we were expecting <pre>{{asTestResult.expect | json}}</pre></ng-template>
+            <label *ngIf="asTestResult.pass; else failureLabel">
+              <ng-container [ngSwitch]="test.op">
+                <ng-container *ngSwitchCase="'play'">
+                  success: {{asTestPlay.expect.success}}
+                  <app-game-state *ngIf="asTestPlay.expect.success; else playError" [state]="asTestPlay.expect.state" ></app-game-state>
+                  <ng-template #playError>{{asTestPlay.expect.success ? 'comment ???' : asTestPlay.expect.reason}}</ng-template>
+                </ng-container>
+                <ng-container *ngSwitchDefault>
+                  &nbsp;returns <pre>{{asTestResult.result | json}}</pre>
+                </ng-container>
+              </ng-container>
+            </label>
+            <ng-template #failureLabel>&nbsp;returns <pre>{{asTestResult.result | json}}</pre> but we were expecting <pre>{{asTestResult.expect | json}}</pre></ng-template>
 
         </ng-container>
         <ng-template #noRes>
-            <label>should returns</label>
+            <label>&nbsp;but should returns</label>
             <ng-container [ngSwitch]="test.op">
-                <ng-container *ngSwitchCase="'isValid'">
-                    <pre>{{test.expect | json}}</pre>
-                </ng-container>
-                <ng-container *ngSwitchCase="'winner'">
-
-                </ng-container>
                 <ng-container *ngSwitchCase="'play'">
-
+                  success: {{asTestPlay.expect.success}}
+                  <app-game-state *ngIf="asTestPlay.expect.success; else playErrorExpect" [state]="asTestPlay.expect.state" ></app-game-state>
+                  <ng-template #playErrorExpect>{{asTestPlay.expect.success ? 'comment ???' : asTestPlay.expect.reason}}</ng-template>
+                </ng-container>
+                <ng-container *ngSwitchDefault>
+                  <pre>{{test.expect | json}}</pre>
                 </ng-container>
             </ng-container>
         </ng-template>

@@ -1,11 +1,11 @@
 <table [class.editable]="editable">
     <tbody>
-        <tr *ngFor="let nbL of lines">
+        <tr *ngFor="let nbL of lines; index as i" [class.ontop] = "nbLines - i > 6" [class]="'line line'+ (nbLines - i)">
             <td *ngFor="let col of columns(nbL); index as i" [class]="col"
                 (click)="play(i)"
                 (pointerenter) = "hover = i"
                 (pointerleave) = "hover = -1"
-                [class.isHover] = "i === hover && grid[i].length < 6"
+                [class.isHover] = "i === hover"
                 >
                 <div></div>
             </td>
@@ -27,10 +27,12 @@
       </tr>
     </table>
     &nbsp;
-  x
-  <table>
-    <tr>
-      <td (click)="currentTurn = 'DEL'" [class.selected]="editable && currentTurn === 'DEL'"><div></div></td>
-    </tr>
-  </table>
+  <ng-container *ngIf="editable">
+    x
+    <table>
+      <tr>
+        <td (click)="currentTurn = 'DEL'" [class.selected]="editable && currentTurn === 'DEL'"><div></div></td>
+      </tr>
+    </table>
+  </ng-container>
 </section>

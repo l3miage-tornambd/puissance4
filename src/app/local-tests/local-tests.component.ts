@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, Inject } from '@angular/core';
+import { User } from '@angular/fire/auth';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { firstValueFrom, Observable } from 'rxjs';
 import { DataService, TestSuite, TestSuiteResults } from '../data.service';
@@ -16,8 +17,23 @@ export class LocalTestsComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  trackById(i: number, ts: TestSuite): string {
+    return ts.id;
+  }
+
+  get obsUser(): Observable<User | null> {
+    return this.dataService.obsUser;
+  }
+
   get localTestsSuitesResults(): Observable<readonly TestSuiteResults[]> {
     return this.dataService.localTestsSuitesResults;
+  }
+
+  async suitesToClipboard(): Promise<string> {
+    const L = await firstValueFrom( this.localTestsSuitesResults );
+    const str = JSON.stringify( L );
+    navigator.clipboard.writeText(str);
+    return str;
   }
 
   async appendTestSuite() {

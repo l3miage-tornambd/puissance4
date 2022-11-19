@@ -4,6 +4,8 @@ import {GAME_STATE, getEmptyGrid, PLAYER} from "../../data/grid";
 import {winner} from "../../data/winner";
 import {genNb} from "../grid/grid.component";
 import {isValid} from "../../data/isValid";
+import {CopypasteService} from "../copypaste.service";
+import {Observable} from "rxjs";
 
 @Component({
   selector: 'app-play',
@@ -19,9 +21,22 @@ export class PlayComponent implements OnInit {
   hover = -1;
   error = "";
 
-  constructor() { }
+  constructor(private cp: CopypasteService) { }
 
   ngOnInit(): void {
+  }
+
+  copyGS() {
+    this.cp.copyGameState( this.state );
+  }
+  pasteGS() {
+    const state = this.cp.pasteGameState();
+    if (state) {
+      this.state = state;
+    }
+  }
+  get canPasteGS(): Observable<boolean> {
+    return this.cp.canPasteGS;
   }
 
   play(col: number) {
@@ -53,8 +68,12 @@ export class PlayComponent implements OnInit {
     )
   }
 
+  get nbLines(): number {
+    return Math.max(6, this.state.grid.reduce( (n, L) => n < L.length ? L.length : n, 0) )
+  }
+
   get lines() {
-    return [...genNb(6)];
+    return [...genNb(this.state.grid, 6)];
   }
 
   columns(nbL: number): (PLAYER | "EMPTY")[] {

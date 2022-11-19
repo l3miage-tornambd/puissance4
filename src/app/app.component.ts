@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy} from '@angular/core';
 import { Auth, sendPasswordResetEmail, User } from '@angular/fire/auth';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import {BehaviorSubject, filter, firstValueFrom, map, Observable, shareReplay} from 'rxjs';
+import {BehaviorSubject, filter, firstValueFrom, map, Observable, of, shareReplay} from 'rxjs';
 import { DataService } from './data.service';
 import {Navigation, NavigationEnd, Router} from "@angular/router";
 
@@ -15,11 +15,11 @@ export class AppComponent {
   private userSubj = new BehaviorSubject<User | null>( null );
   readonly userObs: Observable<User | null> = this.userSubj.asObservable();
   readonly obsCurrentRoute: Observable<string>;
-  readonly routes: {label: string, url: string}[] = [
+  readonly routes: Observable<{label: string, url: string}[]>; /*= new BehaviorSubject([
     {label: "Play", url: "/play"},
-    {label: "Local tests", url: "/local-tests"},
-    {label: "Server tests", url: "/server-tests"},
-  ]
+    // {label: "Local tests", url: "/local-tests"},
+    // {label: "Server tests", url: "/server-tests"},
+  ])*/
 
   constructor(
     private dialog: MatDialog,
@@ -28,6 +28,13 @@ export class AppComponent {
     private router: Router,
   ) {
     auth.onAuthStateChanged( this.userSubj );
+    this.routes = this.userObs.pipe(
+      map( u => u ? [
+        {label: "Play", url: "/play"},
+        {label: "Local tests", url: "/local-tests"},
+        {label: "Server tests", url: "/server-tests"},
+      ] : [{label: "Play", url: "/play"}] )
+    )
     this.obsCurrentRoute = router.events.pipe(
       filter( e => e instanceof NavigationEnd ),
       map( e => (e as NavigationEnd).url ),

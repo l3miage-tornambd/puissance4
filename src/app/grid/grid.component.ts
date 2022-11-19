@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import {COLUMN, GAME_STATE, GRID, PLAYER} from 'src/data/grid';
 
-export function* genNb(nb: number) {
+export function* genNb(grid: GRID, nbMin: number) {
+  const nb = Math.max(nbMin, grid.reduce( (n, L) => L.length > n ? L.length : n, 0) )
   for (let i = 0; i < nb; i++) {
     yield nb - i - 1;
   }
@@ -25,8 +26,12 @@ export class GridComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  get nbLines(): number {
+    return Math.max(6, this.grid.reduce( (n, L) => n < L.length ? L.length : n, 0) )
+  }
+
   get lines() {
-    return [...genNb(6)];
+    return [...genNb(this.grid, 6)];
   }
 
   columns(nbL: number): (PLAYER | "EMPTY")[] {
@@ -34,7 +39,7 @@ export class GridComponent implements OnInit {
   }
 
   play(col: number) {
-    if (this.editable && this.grid[col]?.length < 6) {
+    if (this.editable) {
       if (this.currentTurn === "DEL") {
         this.update.emit(
           this.grid.map((L, i) => {

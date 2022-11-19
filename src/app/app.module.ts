@@ -27,6 +27,7 @@ import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import { PlayComponent } from './play/play.component';
 import {MatSidenavModule} from '@angular/material/sidenav';
 import { ServerTestsComponent } from './server-tests/server-tests.component';
+import {DragDropModule} from '@angular/cdk/drag-drop';
 
 
 @NgModule({
@@ -53,6 +54,7 @@ import { ServerTestsComponent } from './server-tests/server-tests.component';
     MatDialogModule, MatInputModule,
     MatDividerModule, MatAutocompleteModule,
     MatSidenavModule,
+    DragDropModule,
     MatMenuModule, MatSelectModule, provideFirebaseApp(() => initializeApp(environment.firebase)), provideAuth(() => getAuth()), provideFirestore(() => getFirestore()),
   ],
   providers: [],

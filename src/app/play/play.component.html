@@ -18,6 +18,9 @@
   </tbody>
 </table>
 <hr/>
+<button mat-raised-button (click)="copyGS()">Copy game state</button>
+<button mat-raised-button (click)="pasteGS()" [disabled]="!(canPasteGS | async)">Paste game state</button>
+<hr/>
 <pre class="winner">{{winner}}</pre>
 <hr/>
 <pre class="error" *ngIf="validity">vaidity problem : {{validity}}</pre>

@@ -7,7 +7,6 @@ import {
   Observable,
   of,
   shareReplay,
-  Subject,
   Subscription,
   switchMap,
   tap
@@ -23,23 +22,23 @@ import {
   docData,
   collectionData,
   query,
-  QuerySnapshot,
   CollectionReference,
   addDoc,
-  updateDoc, deleteDoc, WithFieldValue
+  updateDoc, deleteDoc
 } from "@angular/fire/firestore";
 import {FirestoreDataConverter} from "@firebase/firestore";
-import {GAME_STATE} from "../data/grid";
 
 const googleProvider = new GoogleAuthProvider();
 
-export type TestCase = Readonly<{id: string, op: "isValid", comment: string, params: Parameters<typeof isValid>, expect: ReturnType<typeof isValid>}>
-                     | Readonly<{id: string, op: "winner", comment: string, params: Parameters<typeof winner>, expect: ReturnType<typeof winner>}>
-                     | Readonly<{id: string, op: "play", comment: string, params: Parameters<typeof play>, expect: ReturnType<typeof play>}>
+export type TestCaseIsValid = Readonly<{id: string, op: "isValid", comment: string, params: Parameters<typeof isValid>, expect: ReturnType<typeof isValid>}>;
+export type TestCaseWinner  = Readonly<{id: string, op: "winner", comment: string, params: Parameters<typeof winner>, expect: ReturnType<typeof winner>}>
+export type TestCasePlay    = Readonly<{id: string, op: "play", comment: string, params: Parameters<typeof play>, expect: ReturnType<typeof play>}>
+export type TestCase = TestCaseIsValid | TestCaseWinner | TestCasePlay;
 
-export type TestCaseResult = Readonly<{id: string, op: "isValid", comment: string, params: Parameters<typeof isValid>, expect: ReturnType<typeof isValid>, pass: boolean, result: ReturnType<typeof isValid>}>
-                           | Readonly<{id: string, op: "winner", comment: string, params: Parameters<typeof winner>, expect: ReturnType<typeof winner>, pass: boolean, result: ReturnType<typeof winner>}>
-                           | Readonly<{id: string, op: "play", comment: string, params: Parameters<typeof play>, expect: ReturnType<typeof play>, pass: boolean, result: ReturnType<typeof play>}>
+export type TestCaseResultIsValid = TestCaseIsValid & Readonly<{pass: boolean, result: ReturnType<typeof isValid>}>
+export type TestCaseResultWinner  = TestCaseWinner  & Readonly<{pass: boolean, result: ReturnType<typeof winner>}>
+export type TestCaseResultPlay    = TestCasePlay    & Readonly<{pass: boolean, result: ReturnType<typeof play>}>
+export type TestCaseResult = TestCaseResultIsValid | TestCaseResultWinner | TestCaseResultPlay;
 
 export interface TestSuite {
   readonly id: string;
@@ -65,9 +64,6 @@ interface FS_TestSuite {
   label: string;
   LtestIds: string[];
 }
-interface FS_TestCase {
-
-}
 
 const TestSuiteConverter: FirestoreDataConverter<FS_TestSuite> = {
   toFirestore: ts => ts,
@@ -83,7 +79,6 @@ const TestCaseConverter: FirestoreDataConverter<TestCase> = {
     if ( expectPlay.success ) { //if defined as true
       obj['expect']['state'] = JSON.stringify( expectPlay.state );
     }
-    console.log("pushing to FireStore", obj)
     return obj;
   },
   fromFirestore: d => {
@@ -101,6 +96,7 @@ const TestCaseConverter: FirestoreDataConverter<TestCase> = {
 })
 export class DataService implements OnDestroy {
   private userSubj = new BehaviorSubject<User | null>(null);
+  readonly obsUser = this.userSubj.asObservable();
   private testSuitesBS = new BehaviorSubject<readonly TestSuite[]>([]);
   readonly testSuites: Observable<readonly TestSuite[]> = this.testSuitesBS.asObservable();
   readonly localTestsSuitesResults: Observable<readonly TestSuiteResults[]>;
@@ -130,7 +126,7 @@ export class DataService implements OnDestroy {
       })
     ).subscribe( this.testSuitesBS );
     this.localTestsSuitesResults = this.testSuites.pipe(
-      tap( Lts => console.log("Lts =", Lts) ),
+      // tap( Lts => console.log("Lts =", Lts) ),
       map( Lts => Lts.map( ts => ({...ts, tests: ts.tests.map( evalTestLocally ) }) )
       ),
       shareReplay(1)
@@ -152,6 +148,25 @@ export class DataService implements OnDestroy {
   async login({ email, password }: Partial<{email: string | null, password: string | null}>) {
     if (email && password) {
       await signInWithEmailAndPassword(this.auth, email, password);
+    }
+  }
+
+  async MoveTestCase({testcase, from, to, atIndex}: {testcase: TestCase, from: TestSuite, to: TestSuite, atIndex: number}) {
+    if (this.auth.currentUser?.email) {
+      const email: string = this.auth.currentUser?.email;
+      if (from === to) {
+        const LtestIds = from.tests.filter(tc => tc.id !== testcase.id).map(tc => tc.id);
+        LtestIds.splice(atIndex, 0, testcase.id);
+        await updateDoc(doc(this.fs, `users/${email}/suites/${from.id}`).withConverter(TestSuiteConverter),
+          {LtestIds});
+      } else {
+        await updateDoc(doc(this.fs, `users/${email}/suites/${from.id}`).withConverter(TestSuiteConverter),
+          {LtestIds: from.tests.filter(tc => tc.id !== testcase.id).map(tc => tc.id)});
+        const LtestIds = to.tests.map(tc => tc.id)
+        LtestIds.splice(atIndex, 0, testcase.id);
+        await updateDoc(doc(this.fs, `users/${email}/suites/${to.id}`).withConverter(TestSuiteConverter),
+          {LtestIds});
+      }
     }
   }
 

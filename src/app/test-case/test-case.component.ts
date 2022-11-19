@@ -1,16 +1,25 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { DataService, TestCase, TestCaseResult } from '../data.service';
+import {
+  DataService,
+  TestCase,
+  TestCasePlay,
+  TestCaseResult,
+  TestCaseResultPlay, TestSuite,
+  TestSuiteResults
+} from '../data.service';
 import { EditTestCaseComponent } from '../edit-test-case/edit-test-case.component';
 import { firstValueFrom } from "rxjs";
+import {CopypasteService} from "../copypaste.service";
 
 @Component({
-  selector: 'app-test-case[test]',
+  selector: 'app-test-case[test][suite]',
   templateUrl: './test-case.component.html',
   styleUrls: ['./test-case.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TestCaseComponent implements OnInit {
+  @Input() suite!: TestSuite | TestSuiteResults;
   @Input() test!: TestCase | TestCaseResult;
   private _details = false;
   @Input()
@@ -18,9 +27,21 @@ export class TestCaseComponent implements OnInit {
   set details(d: boolean) {this._details = d; this.detailsChange.emit(d)}
   @Output() detailsChange = new EventEmitter<boolean>();
 
-  constructor(private dataService: DataService, private dialog: MatDialog) { }
+  constructor(private dataService: DataService, private dialog: MatDialog, private cp: CopypasteService) { }
 
   ngOnInit(): void {
+  }
+
+  copy() {
+    this.cp.copyTestCase( this.test );
+  }
+
+  async duplicate() {
+    return this.dataService.appendTestCase(this.suite, this.test);
+  }
+
+  get asTestPlay(): TestCaseResultPlay {
+    return this.test as TestCaseResultPlay;
   }
 
   get hasResult(): boolean {

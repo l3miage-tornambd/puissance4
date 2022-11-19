@@ -1,29 +1,41 @@
 <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Menu for test suite">
   <mat-icon>more_vert</mat-icon>
 </button>
-<label>{{label}}</label>
-<label (click) = "details = !details">{{details ? "▼" : "▶"}}</label>
+<label (click) = "showList = !showList">{{showList ? "▼" : "▶"}}</label>
+<label class="suiteLabel" [class.pass]="passAll">{{label}}</label>
+<button *ngIf="showList" mat-button (click) = "details = !details">({{details ? "hide" : "show"}} all details)</button>
 
-<ol>
-    <li *ngFor="let tc of suite.tests; index as i">
-        <app-test-case [test] = "tc" [(details)]="Ldetails[i]"></app-test-case>
-    </li>
-</ol>
+<section *ngIf="showList" cdkDropList class="tests" (cdkDropListDropped)="drop($event)" [cdkDropListData]="suite">
+    <div *ngFor="let tc of suite.tests; index as i; trackBy: trackById" cdkDrag [cdkDragData]="tc">
+        <span cdkDragHandle class="handle">
+          <svg width="24px" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
+            <path d="M0 0h24v24H0z" fill="none"></path>
+          </svg>
+        </span>
+        <app-test-case [suite]="suite" [test]="tc" [(details)]="Ldetails[i]"></app-test-case>
+    </div>
+</section>
 
+<hr/>
 
-  <mat-menu #menu="matMenu">
-    <button mat-menu-item (click)="editLabel()">
-        <mat-icon>edit</mat-icon>
-        <span>Edit label</span>
-    </button>
-    <button mat-menu-item (click)="appendTestCase()">
-        <mat-icon>playlist_add</mat-icon>
-        <span>Add test case</span>
-    </button>
-
-    <hr/>
-    <button mat-menu-item color="warn" (click)="removeTestSuite()">
-      <mat-icon>delete</mat-icon>
-      <span>Remove</span>
-    </button>
-  </mat-menu>
+<mat-menu #menu="matMenu">
+  <button mat-menu-item (click)="editLabel()">
+      <mat-icon>edit</mat-icon>
+      <span>Edit label</span>
+  </button>
+  <hr/>
+  <button mat-menu-item (click)="paste()" [disabled]="!canPaste">
+    <mat-icon>playlist_add</mat-icon>
+    <span>Paste test case</span>
+  </button>
+  <button mat-menu-item (click)="appendTestCase()">
+    <mat-icon>playlist_add</mat-icon>
+    <span>Add test case</span>
+  </button>
+  <hr/>
+  <button mat-menu-item color="warn" (click)="removeTestSuite()">
+    <mat-icon>delete</mat-icon>
+    <span>Delete</span>
+  </button>
+</mat-menu>

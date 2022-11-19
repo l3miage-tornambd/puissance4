@@ -1,1 +1,7 @@
-<p>server-tests works!</p>
+<ng-container *ngIf="obsUser | async as U; else notLogged">
+  Server tests...
+</ng-container>
+
+<ng-template #notLogged>
+  You must be logged in to access this ressource...
+</ng-template>

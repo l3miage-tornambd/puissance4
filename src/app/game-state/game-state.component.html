@@ -23,7 +23,7 @@
     <mat-icon>file_copy</mat-icon>
     <span>Copy</span>
   </button>
-  <button mat-menu-item [disabled]="!canPaste" (click)="paste()">
+  <button mat-menu-item [disabled]="!(canPaste | async) || !editable" (click)="paste()">
     <mat-icon>paste</mat-icon>
     <span>Paste</span>
   </button>

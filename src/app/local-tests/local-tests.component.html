@@ -1,10 +1,17 @@
-<app-bloc-tests
-    *ngFor  = "let ts of localTestsSuitesResults | async"
-    [suite] = "ts"
-></app-bloc-tests>
-<button mat-mini-fab color="primary" 
-        aria-label="New test suite"
-        (click) = "appendTestSuite()"
-        >
-    + <!-- <mat-icon>plus</mat-icon> -->
-</button>
+<ng-container *ngIf="obsUser | async as U; else notLogged">
+  <button mat-raised-button color="primary" aria-label="New test suite" (click)="appendTestSuite()">
+    New test suite
+  </button>
+  <button mat-raised-button color="primary" aria-label="New test suite" (click)="suitesToClipboard()">
+    copy tests to clipboard
+  </button>
+  <hr/>
+  <section cdkDropListGroup>
+    <app-bloc-tests *ngFor="let ts of localTestsSuitesResults | async; trackBy: trackById" [suite]="ts"></app-bloc-tests>
+  </section>
+
+</ng-container>
+
+<ng-template #notLogged>
+  You must be logged in to access this ressource...
+</ng-template>
