@@ -26,6 +26,7 @@ export class TestCaseComponent implements OnInit {
   get details(): boolean {return this._details}
   set details(d: boolean) {this._details = d; this.detailsChange.emit(d)}
   @Output() detailsChange = new EventEmitter<boolean>();
+  selected = false;
 
   constructor(private dataService: DataService, private dialog: MatDialog, private cp: CopypasteService) { }
 

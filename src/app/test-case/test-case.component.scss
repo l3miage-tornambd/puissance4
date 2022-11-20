@@ -14,3 +14,20 @@ section.testcase {
         margin-right: 1em;
     }
 }
+
+button.menu {
+  width: 30px;
+  height: 30px;
+
+  opacity: 0;
+}
+
+:host:hover {
+  button.menu {
+    opacity: 100%;
+  }
+}
+
+.selected {
+  background-color: yellow;
+}
