@@ -1,9 +1,9 @@
 import { Component, OnInit, Inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { GAME_STATE } from 'src/data/grid';
-import { isValid } from 'src/data/isValid';
-import { PLAY_FAILURE } from 'src/data/play';
-import { winner } from 'src/data/winner';
+import { GAME_STATE } from '../data/grid';
+import { isValid } from '../data/isValid';
+import { PLAY_FAILURE } from '../data/play';
+import { winner } from '../data/winner';
 import { TestCase } from '../data.service';
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };

@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { play } from 'src/data/play';
-import {GAME_STATE, getEmptyGrid, PLAYER} from "../../data/grid";
-import {winner} from "../../data/winner";
+import { play } from '../data/play';
+import {GAME_STATE, getEmptyGrid, PLAYER} from "../data/grid";
+import {winner} from "../data/winner";
 import {genNb} from "../grid/grid.component";
-import {isValid} from "../../data/isValid";
+import {isValid} from "../data/isValid";
 import {CopypasteService} from "../copypaste.service";
 import {Observable} from "rxjs";
 

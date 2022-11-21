@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {GAME_STATE} from "../data/grid";
+import {GAME_STATE} from "./data/grid";
 import {TestCase} from "./data.service";
 import {BehaviorSubject, map, shareReplay} from "rxjs";
 

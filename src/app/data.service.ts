@@ -11,9 +11,9 @@ import {
   switchMap,
   tap
 } from 'rxjs';
-import { isValid } from "src/data/isValid"
-import { play } from 'src/data/play';
-import { winner } from 'src/data/winner';
+import { isValid } from "./data/isValid"
+import { play } from './data/play';
+import { winner } from './data/winner';
 import {Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, User} from "@angular/fire/auth"
 import {
   Firestore,

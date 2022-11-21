@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import {COLUMN, GAME_STATE, GRID, PLAYER} from 'src/data/grid';
+import {COLUMN, GAME_STATE, GRID, PLAYER} from '../data/grid';
 
 export function* genNb(grid: GRID, nbMin: number) {
   const nb = Math.max(nbMin, grid.reduce( (n, L) => L.length > n ? L.length : n, 0) )

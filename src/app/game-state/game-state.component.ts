@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { GAME_STATE } from 'src/data/grid';
+import { GAME_STATE } from '../data/grid';
 import {CopypasteService} from "../copypaste.service";
 import {Observable} from "rxjs";
 
