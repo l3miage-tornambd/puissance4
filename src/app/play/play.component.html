@@ -1,29 +1,32 @@
-<label class="player">
-  <label >Player {{state.turn === "P1" ? "1" : "2"}}</label>
-  <div [class]="state.turn"></div>
-</label>
+<ng-container *ngIf="obsState | async as S">
+  <label class="player">
+    <label >Player {{S.gs.turn === "P1" ? "1" : "2"}}</label>
+    <div [class]="S.gs.turn"></div>
+  </label>
 
-<table>
-  <tbody>
-  <tr *ngFor="let nbL of lines">
-    <td *ngFor="let col of columns(nbL); index as i" [class]="col"
-        (click)="play(i)"
-        (pointerenter) = "hover = i"
-        (pointerleave) = "hover = -1"
-        [class.isHover] = "i === hover && state.grid[i].length < 6"
-    >
-      <div></div>
-    </td>
-  </tr>
-  </tbody>
-</table>
-<hr/>
-<button mat-raised-button (click)="copyGS()">Copy game state</button>
-<button mat-raised-button (click)="pasteGS()" [disabled]="!(canPasteGS | async)">Paste game state</button>
-<hr/>
-<pre class="winner">{{winner}}</pre>
-<hr/>
-<pre class="error" *ngIf="validity">vaidity problem : {{validity}}</pre>
-<hr/>
-<pre class="error" *ngIf="error">error: {{error}}</pre>
-<hr/>
+  <table>
+    <tbody>
+    <tr *ngFor="let nbL of lines">
+      <td *ngFor="let col of columns(nbL); index as i" [class]="col"
+          (click)="play(i+1)"
+          (pointerenter) = "hover = i"
+          (pointerleave) = "hover = -1"
+          [class.isHover] = "i === hover && S.gs.grid[i].length < 6"
+      >
+        <div></div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <hr/>
+  <button mat-raised-button (click)="copyGS()">Copy game state</button>
+  <button mat-raised-button (click)="pasteGS()" [disabled]="!(canPasteGS | async)">Paste game state</button>
+  <hr/>
+  <pre class="winner">Winner: {{(S.winner.exec === "failed" ? S.winner.reason : S.winner.returns) | json}}</pre>
+  <hr/>
+  <pre class="error">Validity: {{(S.isValid.exec === "failed" ? S.isValid.reason : (S.isValid.returns.valid ? true : S.isValid.returns.reason )) | json}}</pre>
+  <hr/>
+  <pre class="error" *ngIf="playRes as P">Play: {{ (P.exec === "failed" ? P.reason : (P.returns.success ? "Success" : P.returns.reason)) | json}}</pre>
+  <hr/>
+</ng-container>
+

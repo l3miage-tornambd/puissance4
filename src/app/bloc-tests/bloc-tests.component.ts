@@ -2,11 +2,12 @@ import {ChangeDetectionStrategy, Component, Input, OnInit, Inject, ViewChildren,
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {firstValueFrom, Observable} from 'rxjs';
 import { getEmptyGrid } from '../data/grid';
-import { DataService, TestCase, TestSuite, TestSuiteResults } from '../data.service';
+import { DataService } from '../data.service';
 import { EditTestCaseComponent } from '../edit-test-case/edit-test-case.component';
 import { DialogEditTestSuiteLabel } from '../local-tests/local-tests.component';
 import {CopypasteService} from "../copypaste.service";
 import {CdkDragDrop} from "@angular/cdk/drag-drop";
+import { TestSuite, TestSuiteResults, TestCase } from '../data/tests-definitions';
 
 
 @Component({

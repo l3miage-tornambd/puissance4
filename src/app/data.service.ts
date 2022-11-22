@@ -9,11 +9,9 @@ import {
   shareReplay,
   Subscription,
   switchMap,
-  tap
+  from
 } from 'rxjs';
-import { isValid } from "./data/isValid"
 import { play } from './data/play';
-import { winner } from './data/winner';
 import {Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, User} from "@angular/fire/auth"
 import {
   Firestore,
@@ -27,36 +25,26 @@ import {
   updateDoc, deleteDoc
 } from "@angular/fire/firestore";
 import {FirestoreDataConverter} from "@firebase/firestore";
+import {  TestCase, TestCaseResult, TestCaseResultWinner, TestSuite, TestSuiteResults } from './data/tests-definitions';
 
 const googleProvider = new GoogleAuthProvider();
 
-export type TestCaseIsValid = Readonly<{id: string, op: "isValid", comment: string, params: Parameters<typeof isValid>, expect: ReturnType<typeof isValid>}>;
-export type TestCaseWinner  = Readonly<{id: string, op: "winner", comment: string, params: Parameters<typeof winner>, expect: ReturnType<typeof winner>}>
-export type TestCasePlay    = Readonly<{id: string, op: "play", comment: string, params: Parameters<typeof play>, expect: ReturnType<typeof play>}>
-export type TestCase = TestCaseIsValid | TestCaseWinner | TestCasePlay;
-
-export type TestCaseResultIsValid = TestCaseIsValid & Readonly<{pass: boolean, result: ReturnType<typeof isValid>}>
-export type TestCaseResultWinner  = TestCaseWinner  & Readonly<{pass: boolean, result: ReturnType<typeof winner>}>
-export type TestCaseResultPlay    = TestCasePlay    & Readonly<{pass: boolean, result: ReturnType<typeof play>}>
-export type TestCaseResult = TestCaseResultIsValid | TestCaseResultWinner | TestCaseResultPlay;
-
-export interface TestSuite {
-  readonly id: string;
-  readonly label: string;
-  readonly tests: readonly TestCase[];
-}
-
-export interface TestSuiteResults {
-  readonly id: string;
-  readonly label: string;
-  readonly tests: readonly TestCaseResult[];
-}
-
-function evalTestLocally(t: TestCase): TestCaseResult {
-  const tcr = t.op === "isValid" ? {...t, result: isValid(...t.params)}
-                  : t.op === "winner" ? {...t, result: winner(...t.params)}
-                    : {...t, result: play(...t.params)};
-  return {...tcr, pass: deepEqual(tcr.expect, tcr.result)};
+function evalTestLocally(t: TestCase): Promise<TestCaseResult> {
+  return new Promise<TestCaseResult>( resolve => {
+    const worker = new Worker(new URL('./test-case.worker', import.meta.url));
+    const timer = setTimeout( 
+      () => {
+        worker.terminate();
+        resolve({...t, pass: false, result: {exec: "failed", reason: "timeout"}});
+      }, 
+      1000
+    )
+    worker.onmessage = (evt: MessageEvent<TestCaseResult>) => {
+      clearTimeout( timer );
+      resolve( evt.data );
+    };
+    worker.postMessage(t);  
+  });
 }
 
 interface FS_TestSuite {
@@ -127,8 +115,8 @@ export class DataService implements OnDestroy {
     ).subscribe( this.testSuitesBS );
     this.localTestsSuitesResults = this.testSuites.pipe(
       // tap( Lts => console.log("Lts =", Lts) ),
-      map( Lts => Lts.map( ts => ({...ts, tests: ts.tests.map( evalTestLocally ) }) )
-      ),
+      map( Lts => Lts.map( async ts => ({...ts, tests: await Promise.all(ts.tests.map( evalTestLocally ) ) }) ) ),
+      switchMap( L => Promise.all(L) ),
       shareReplay(1)
     );
   }

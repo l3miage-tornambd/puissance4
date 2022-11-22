@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, OnInit, Inject } from '@angular/cor
 import { User } from '@angular/fire/auth';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { firstValueFrom, Observable } from 'rxjs';
-import { DataService, TestSuite, TestSuiteResults } from '../data.service';
+import { DataService} from '../data.service';
+import { TestSuite, TestSuiteResults } from '../data/tests-definitions';
 
 @Component({
   selector: 'app-local-tests',

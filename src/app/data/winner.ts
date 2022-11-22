@@ -1,4 +1,4 @@
-import {GAME_STATE, GRID, PLAYER} from "./grid";
+import {GAME_STATE, PLAYER} from "./grid";
 
 type DELTA = -1 | 0 | 1;
 type DIRECTION = [dx: DELTA, dy: DELTA]
@@ -40,5 +40,7 @@ export function winnerCond(state: GAME_STATE, f: (P: PLAYER) => boolean): Return
  * @returns "no winner yet" if the grid is not full and no player has 4 aligned tokens.
  */
  export function winner(state: GAME_STATE): PLAYER | "DRAW" | "no winner yet" {
+   // let toto: any;
+   // toto.marf = 4;
    return winnerCond(state, () => true)
  }

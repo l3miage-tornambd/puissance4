@@ -1,11 +1,75 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { play } from '../data/play';
-import {GAME_STATE, getEmptyGrid, PLAYER} from "../data/grid";
+import {ChangeDetectionStrategy, Component, NgZone, OnInit} from '@angular/core';
+import {GAME_STATE, getEmptyGrid, GRID, PLAYER} from "../data/grid";
 import {winner} from "../data/winner";
 import {genNb} from "../grid/grid.component";
 import {isValid} from "../data/isValid";
 import {CopypasteService} from "../copypaste.service";
-import {Observable} from "rxjs";
+import {
+  BehaviorSubject,
+  from,
+  merge,
+  Observable, OperatorFunction,
+  shareReplay,
+  Subject,
+  switchMap, tap,
+  zip
+} from "rxjs";
+import { DATAEXEC, EXECTYPE, ExecResult } from '../data/tests-definitions';
+import { play } from '../data/play';
+
+function runInZone<T>(zone: NgZone): OperatorFunction<T, T> {
+  return (source) => {
+    return new Observable(observer => {
+      const onNext = (value: T) => zone.run(() => observer.next(value));
+      const onError = (e: any) => zone.run(() => observer.error(e));
+      const onComplete = () => zone.run(() => observer.complete());
+      return source.subscribe(onNext, onError, onComplete);
+    });
+  };
+}
+
+async function execF<T extends EXECTYPE>(ex: DATAEXEC<T>): Promise<ExecResult<T>> {
+  return new Promise( resolve => {
+    const worker = new Worker(new URL('../play.worker', import.meta.url));
+    const timer = setTimeout(
+      () => {
+        worker.terminate();
+        resolve({exec: "failed", reason: "timeout"});
+      },
+      1000
+    )
+    worker.onmessage = (evt: MessageEvent<ExecResult<T>>) => {
+      clearTimeout( timer );
+      resolve( evt.data );
+    };
+    worker.postMessage(ex);
+  });
+}
+
+function nb(grid: GRID, p: GAME_STATE["turn"]): number {
+  return grid.reduce(
+    (nb, L) => nb + L.reduce( (n, c) => c === p ? 1 + n : n, 0)
+    , 0
+  )
+}
+
+interface STATE {
+  gs: GAME_STATE;
+  winner: ExecResult<typeof winner>;
+  isValid: ExecResult<typeof isValid>;
+  nbP1: number;
+  nbP2: number;
+}
+
+async function gsp2State(gs: GAME_STATE): Promise<STATE> {
+  return {
+    gs: gs,
+    winner: await execF<typeof winner>({op: "winner", params: [gs]}),
+    isValid: await execF<typeof isValid>({op: "isValid", params: [gs]}),
+    nbP1: nb(gs.grid, "P1"),
+    nbP2: nb(gs.grid, "P2"),
+  };
+}
 
 @Component({
   selector: 'app-play',
@@ -14,79 +78,55 @@ import {Observable} from "rxjs";
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PlayComponent implements OnInit {
-  state: GAME_STATE = {
+  private gs = new BehaviorSubject<GAME_STATE>({
     turn: "P1",
     grid: getEmptyGrid()
-  }
+  });
+  playRes?: ExecResult<typeof play>;
   hover = -1;
-  error = "";
+  readonly obsState: Observable<STATE>;
 
-  constructor(private cp: CopypasteService) { }
+  constructor(private cp: CopypasteService, private ngZone: NgZone) {
+    this.obsState = this.gs.pipe(
+      switchMap( gsp2State ),
+      shareReplay(1),
+      runInZone( this.ngZone )
+    );
+  }
 
   ngOnInit(): void {
   }
 
   copyGS() {
-    this.cp.copyGameState( this.state );
+    this.cp.copyGameState( this.gs.value );
   }
   pasteGS() {
     const state = this.cp.pasteGameState();
     if (state) {
-      this.state = state;
+      this.gs.next( state );
     }
   }
   get canPasteGS(): Observable<boolean> {
     return this.cp.canPasteGS;
   }
 
-  play(col: number) {
-    const res = play(this.state, col + 1)
-    if (res.success) {
-      this.error = "";
-      this.state = res.state;
-    } else {
-      this.error = res.reason;
-    }
-  }
-
-  get winner() {
-    return winner(this.state)
-  }
-
-  get nbP1(): number {
-    return this.nb("P1")
-  }
-
-  get nbP2(): number {
-    return this.nb("P2")
-  }
-
-  private nb(p: GAME_STATE["turn"]): number {
-    return this.state.grid.reduce(
-      (nb, L) => nb + L.reduce( (n, c) => c === p ? 1 + n : n, 0)
-      , 0
-    )
+  async play(col: number) {
+    this.playRes = col === undefined ? undefined : await execF<typeof play>({op: "play", params: [this.gs.value, col]});
+    const newGS = (!this.playRes || this.playRes.exec === "failed" || !this.playRes.returns.success ) ? this.gs.value : this.playRes.returns.state;
+    this.gs.next( newGS );
   }
 
   get nbLines(): number {
-    return Math.max(6, this.state.grid.reduce( (n, L) => n < L.length ? L.length : n, 0) )
+    return Math.max(6, this.gs.value.grid.reduce( (n, L) => n < L.length ? L.length : n, 0) )
   }
 
   get lines() {
-    return [...genNb(this.state.grid, 6)];
+    return [...genNb(this.gs.value.grid, 6)];
   }
 
   columns(nbL: number): (PLAYER | "EMPTY")[] {
-    return this.state.grid.map( col => col[nbL] ?? "EMPTY" );
-  }
-
-  get validity(): string {
-    const res = isValid(this.state);
-    if (res.valid) {
-      return "";
-    } else {
-      return res.reason;
-    }
+    return this.gs.value.grid.map( col => col[nbL] ?? "EMPTY" );
   }
 
 }
+

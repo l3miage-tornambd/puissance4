@@ -61,7 +61,7 @@
         </ng-container>
         <ng-container *ngSwitchDefault>
           &nbsp;returns
-          <pre>{{asTestResult.result | json}}</pre>
+          <pre>{{ (asTestResult.result.exec === "failed" ? asTestResult.result.reason : asTestResult.result.returns ) | json}}</pre>
         </ng-container>
       </ng-container>
     </label>

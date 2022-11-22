@@ -1,16 +1,12 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
-  DataService,
-  TestCase,
-  TestCasePlay,
-  TestCaseResult,
-  TestCaseResultPlay, TestSuite,
-  TestSuiteResults
+  DataService
 } from '../data.service';
 import { EditTestCaseComponent } from '../edit-test-case/edit-test-case.component';
 import { firstValueFrom } from "rxjs";
 import {CopypasteService} from "../copypaste.service";
+import { TestSuite, TestSuiteResults, TestCase, TestCaseResult, TestCaseResultPlay } from '../data/tests-definitions';
 
 @Component({
   selector: 'app-test-case[test][suite]',

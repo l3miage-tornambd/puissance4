@@ -3,8 +3,8 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { GAME_STATE } from '../data/grid';
 import { isValid } from '../data/isValid';
 import { PLAY_FAILURE } from '../data/play';
+import { TestCase } from '../data/tests-definitions';
 import { winner } from '../data/winner';
-import { TestCase } from '../data.service';
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
