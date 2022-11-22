@@ -3,8 +3,8 @@ import { Auth, sendPasswordResetEmail, User } from '@angular/fire/auth';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import {BehaviorSubject, filter, firstValueFrom, map, Observable, of, shareReplay} from 'rxjs';
-import { DataService } from './data.service';
-import {Navigation, NavigationEnd, Router} from "@angular/router";
+import {DataService, logins} from './data.service';
+import {NavigationEnd, Router} from "@angular/router";
 
 @Component({
   selector: 'app-root',
@@ -15,11 +15,7 @@ export class AppComponent {
   private userSubj = new BehaviorSubject<User | null>( null );
   readonly userObs: Observable<User | null> = this.userSubj.asObservable();
   readonly obsCurrentRoute: Observable<string>;
-  readonly routes: Observable<{label: string, url: string}[]>; /*= new BehaviorSubject([
-    {label: "Play", url: "/play"},
-    // {label: "Local tests", url: "/local-tests"},
-    // {label: "Server tests", url: "/server-tests"},
-  ])*/
+  readonly routes: Observable<{label: string, url: string}[]>;
 
   constructor(
     private dialog: MatDialog,
@@ -32,7 +28,8 @@ export class AppComponent {
       map( u => u ? [
         {label: "Play", url: "/play"},
         {label: "Local tests", url: "/local-tests"},
-        {label: "Server tests", url: "/server-tests"},
+        {label: "Mutants", url: "/mutants"},
+        {label: "Evaluations", url: "/server-tests"},
       ] : [{label: "Play", url: "/play"}] )
     )
     this.obsCurrentRoute = router.events.pipe(
@@ -117,9 +114,7 @@ export class AppComponent {
 })
 export class DialogStudentLogin {
   reset = false;
-  readonly loginOptions: string[] = [
-    "alexandre.demeure@univ-grenoble-alpes.fr", "Adil-Massa.Adomo-Bitea@etu.univ-grenoble-alpes.fr", "Elhadj.Bah@etu.univ-grenoble-alpes.fr", "Ibrahima.Barry2@etu.univ-grenoble-alpes.fr", "Mariama.Barry@etu.univ-grenoble-alpes.fr", "Anas.Benabbou@etu.univ-grenoble-alpes.fr", "Ilian.Benaissa@etu.univ-grenoble-alpes.fr", "Sami.Bensaid@etu.univ-grenoble-alpes.fr", "Mustapha-Mahrez.Bouchelouche@etu.univ-grenoble-alpes.fr", "Walid.Bouhali@etu.univ-grenoble-alpes.fr", "Leo.Bouvier1@etu.univ-grenoble-alpes.fr", "Quentin.Bebin@etu.univ-grenoble-alpes.fr", "Kyllian.Charre@etu.univ-grenoble-alpes.fr", "Vincent.Chazeau@etu.univ-grenoble-alpes.fr", "Seynabou.Conde@etu.univ-grenoble-alpes.fr", "Levi.Cormier@etu.univ-grenoble-alpes.fr", "Samuel.Damessi@etu.univ-grenoble-alpes.fr", "Alex.Delagrange@etu.univ-grenoble-alpes.fr", "Oumou.Dembele@etu.univ-grenoble-alpes.fr", "Fatoumata.Diaby@etu.univ-grenoble-alpes.fr", "Aminata.Diagne@etu.univ-grenoble-alpes.fr", "Thierno.Diallo3@etu.univ-grenoble-alpes.fr", "Tien.Duong@etu.univ-grenoble-alpes.fr", "Anas.El-Bouchrifi@etu.univ-grenoble-alpes.fr", "Mouad.El-Kbabty@etu.univ-grenoble-alpes.fr", "Chaymae.Elkhou@etu.univ-grenoble-alpes.fr", "Khalil.Essouaid@etu.univ-grenoble-alpes.fr", "Abdelkader.Ezarouali@etu.univ-grenoble-alpes.fr", "Matias.Freund-Galeano@etu.univ-grenoble-alpes.fr", "Lucas.Giry@etu.univ-grenoble-alpes.fr", "Quentin.Grange@etu.univ-grenoble-alpes.fr", "Rayane.Guendouz@etu.univ-grenoble-alpes.fr", "Paul.Gueripel@etu.univ-grenoble-alpes.fr", "Jocelin.Heinen@etu.univ-grenoble-alpes.fr", "Floriane.Jandot@etu.univ-grenoble-alpes.fr", "Myriam.Khaddar@etu.univ-grenoble-alpes.fr", "Ibrahim-Goukouni.Khalil@etu.univ-grenoble-alpes.fr", "Zeinabou.Kone@etu.univ-grenoble-alpes.fr", "Hatim.Laghrissi@etu.univ-grenoble-alpes.fr", "Yasmine.Larbi@etu.univ-grenoble-alpes.fr", "Nour.Machmachi@etu.univ-grenoble-alpes.fr", "Salaheddin.Mesouak@etu.univ-grenoble-alpes.fr", "Souleymen.Ouchane@etu.univ-grenoble-alpes.fr", "Lyna.Oulahcene@etu.univ-grenoble-alpes.fr", "Willem.Papeau@etu.univ-grenoble-alpes.fr", "Theo.Patrac@etu.univ-grenoble-alpes.fr", "Timoty.Razafindrabe@etu.univ-grenoble-alpes.fr", "Bastien.Riado@etu.univ-grenoble-alpes.fr", "Ayman.Salouh@etu.univ-grenoble-alpes.fr", "Floreal.Sangenis@etu.univ-grenoble-alpes.fr", "Farah.Seifeddine@etu.univ-grenoble-alpes.fr", "Mariam.Sidibe@etu.univ-grenoble-alpes.fr", "Damien.Tornambe@etu.univ-grenoble-alpes.fr", "Julien.Turc@etu.univ-grenoble-alpes.fr", "Marie.Wyss@etu.univ-grenoble-alpes.fr", "Sicong.Xu@etu.univ-grenoble-alpes.fr", "Mohamad-Majd.Yagan@etu.univ-grenoble-alpes.fr", "Kokouvi.Zodjihoue@etu.univ-grenoble-alpes.fr"
-  ].map( s => s.toLowerCase() );
+  readonly loginOptions: string[] = logins.map( s => s.toLowerCase() );
   filteredLoginOptions: Observable<string[]>;
 
   readonly fg = new FormGroup({

@@ -28,6 +28,7 @@ import { PlayComponent } from './play/play.component';
 import {MatSidenavModule} from '@angular/material/sidenav';
 import { ServerTestsComponent } from './server-tests/server-tests.component';
 import {DragDropModule} from '@angular/cdk/drag-drop';
+import {DialogMutant, MutantsComponent} from './mutants/mutants.component';
 
 
 @NgModule({
@@ -43,6 +44,7 @@ import {DragDropModule} from '@angular/cdk/drag-drop';
     DialogStudentLogin,
     PlayComponent,
     ServerTestsComponent,
+    MutantsComponent, DialogMutant,
   ],
   imports: [
     BrowserModule,

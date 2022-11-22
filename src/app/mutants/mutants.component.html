@@ -1,0 +1,28 @@
+<ng-container *ngIf="obsUser | async as U; else notLogged">
+  <h2>Mutant codes</h2>
+
+  <button mat-raised-button color="primary" (click)="addMutant()">Append mutant</button>
+
+  <hr/>
+
+  <section class="opMutant" *ngFor="let mui of mutants | async">
+    <h3>{{mui.op}}</h3>
+    <ul>
+      <li *ngFor="let res of mui.L">
+        <summary>
+          <label>{{res.mutant.comment}} (tests failed {{res.fail.length}}/{{res.fail.length + res.pass.length}})</label>
+          <details>
+            <pre>{{res.mutant.body}}</pre>
+            <app-test-case style="display: block" *ngFor="let tstc of res.fail" [test]="tstc.tcr" [suite]="tstc.ts"></app-test-case>
+          </details>
+        </summary>
+
+      </li>
+    </ul>
+  </section>
+
+</ng-container>
+
+<ng-template #notLogged>
+  You must be logged in to access this ressource...
+</ng-template>
