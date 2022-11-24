@@ -18,15 +18,18 @@
     </tr>
     </tbody>
   </table>
+  <form (ngSubmit)="play(colPlay.valueAsNumber)">
+    <mat-form-field>
+      <mat-label>Play at column</mat-label>
+      <input matInput name="playAt" type="number" #colPlay value="4"/>
+    </mat-form-field>
+  </form>
+
   <hr/>
   <button mat-raised-button (click)="copyGS()">Copy game state</button>
   <button mat-raised-button (click)="pasteGS()" [disabled]="!(canPasteGS | async)">Paste game state</button>
-  <hr/>
   <pre class="winner">Winner: {{(S.winner.exec === "failed" ? S.winner.reason : S.winner.returns) | json}}</pre>
-  <hr/>
   <pre class="error">Validity: {{(S.isValid.exec === "failed" ? S.isValid.reason : (S.isValid.returns.valid ? true : S.isValid.returns.reason )) | json}}</pre>
-  <hr/>
   <pre class="error" *ngIf="playRes as P">Play: {{ (P.exec === "failed" ? P.reason : (P.returns.success ? "Success" : P.returns.reason)) | json}}</pre>
-  <hr/>
 </ng-container>
 

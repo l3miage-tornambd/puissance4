@@ -29,6 +29,7 @@ import {MatSidenavModule} from '@angular/material/sidenav';
 import { ServerTestsComponent } from './server-tests/server-tests.component';
 import {DragDropModule} from '@angular/cdk/drag-drop';
 import {DialogMutant, MutantsComponent} from './mutants/mutants.component';
+import {MatSnackBarModule} from '@angular/material/snack-bar';
 
 
 @NgModule({
@@ -55,7 +56,7 @@ import {DialogMutant, MutantsComponent} from './mutants/mutants.component';
     MatButtonModule, MatIconModule,
     MatDialogModule, MatInputModule,
     MatDividerModule, MatAutocompleteModule,
-    MatSidenavModule,
+    MatSidenavModule, MatSnackBarModule,
     DragDropModule,
     MatMenuModule, MatSelectModule, provideFirebaseApp(() => initializeApp(environment.firebase)), provideAuth(() => getAuth()), provideFirestore(() => getFirestore()),
   ],

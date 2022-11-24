@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import {DataService} from "../data.service";
 import {Observable} from "rxjs";
 import {User} from "@angular/fire/auth";
+import { DocumentSnapshot} from "@angular/fire/firestore";
+import {FS_User} from "../utils";
 
 @Component({
   selector: 'app-server-tests',
@@ -10,8 +12,11 @@ import {User} from "@angular/fire/auth";
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ServerTestsComponent implements OnInit {
+  readonly obsUserDocs: Observable<DocumentSnapshot<FS_User>[]>;
 
-  constructor(private dataService: DataService) { }
+  constructor(private dataService: DataService) {
+    this.obsUserDocs = dataService.observatedUsersDoc;
+  }
 
   ngOnInit(): void {
   }
@@ -20,4 +25,16 @@ export class ServerTestsComponent implements OnInit {
     return this.dataService.obsUser;
   }
 
+  getStudentName(snap: DocumentSnapshot<FS_User>): string {
+    return snap.id.split("@")[0]?.split(".").join(" ") ?? "problem...";
+  }
+
+  getStudentResult(snap: DocumentSnapshot<FS_User>): string {
+    return "WiP";
+  }
+
+  forceEval(snap: DocumentSnapshot<FS_User>) {
+    // get student tests
+    this.dataService.forceEvalStudent( snap.ref );
+  }
 }

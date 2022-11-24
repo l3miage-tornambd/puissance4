@@ -1,8 +1,8 @@
 <ng-container *ngIf="obsUser | async as U; else notLogged">
-  <button mat-raised-button color="primary" aria-label="New test suite" (click)="appendTestSuite()">
+  <button mat-raised-button color="primary" (click)="appendTestSuite()">
     New test suite
   </button>
-  <button mat-raised-button color="primary" aria-label="New test suite" (click)="suitesToClipboard()">
+  <button mat-raised-button color="primary" (click)="suitesToClipboard()">
     copy tests to clipboard
   </button>
   <hr/>

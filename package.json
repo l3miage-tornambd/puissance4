@@ -6,7 +6,8 @@
     "start": "ng serve --host 0.0.0.0",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "local-api-server": "ts-node --project tsconfig.node.json  localServer.ts"
   },
   "private": true,
   "dependencies": {
@@ -34,13 +35,16 @@
     "@stryker-mutator/karma-runner": "^6.3.0",
     "@stryker-mutator/typescript-checker": "^6.3.0",
     "@types/deep-equal": "^1.0.1",
+    "@types/express": "^4.17.14",
     "@types/jasmine": "~4.0.0",
+    "express": "^4.18.2",
     "jasmine-core": "~4.3.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.1.0",
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.0.0",
+    "ts-node": "^10.9.1",
     "typescript": "~4.7.2"
   }
 }

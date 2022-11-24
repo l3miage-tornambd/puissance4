@@ -1,7 +1,7 @@
 import {Injectable, OnDestroy} from '@angular/core';
 import {
   BehaviorSubject,
-  combineLatest, filter,
+  combineLatest, filter, from,
   map,
   Observable,
   of,
@@ -10,7 +10,7 @@ import {
   switchMap, tap,
 } from 'rxjs';
 import {play} from './data/play';
-import {Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, User} from "@angular/fire/auth"
+import {Auth, signInWithEmailAndPassword, User} from "@angular/fire/auth"
 import {
   Firestore,
   collection,
@@ -20,110 +20,30 @@ import {
   query,
   CollectionReference,
   addDoc,
-  updateDoc, deleteDoc, WithFieldValue,
-  DocumentReference, arrayUnion
+  updateDoc, deleteDoc,
+  DocumentReference, arrayUnion, getDocs, getDoc, setDoc,
+  DocumentSnapshot
 } from "@angular/fire/firestore";
-import {FirestoreDataConverter, DocumentData, QueryDocumentSnapshot, SnapshotOptions} from "@firebase/firestore";
 import {
   Mutant, SerializedMutant, serializeMutant,
   TestCase,
-  TestCaseResult,
   TestSuite,
-  TestSuiteResults, unserializeMutant
+  TestSuiteResults
 } from './data/tests-definitions';
+import {winner} from "./data/winner";
+import {isValid} from "./data/isValid";
+import {MatSnackBar} from "@angular/material/snack-bar";
+import {
+  evalMutant,
+  evalTestsLocally,
+  FS_TestSuite,
+  FS_User, LocalSave,
+  TestCaseConverter,
+  TestSuiteConverter,
+  UserConverter
+} from './utils';
 
-const googleProvider = new GoogleAuthProvider();
-export const logins: readonly string[] = [
-  "alexandre.demeure@univ-grenoble-alpes.fr", "Adil-Massa.Adomo-Bitea@etu.univ-grenoble-alpes.fr", "Elhadj.Bah@etu.univ-grenoble-alpes.fr", "Ibrahima.Barry2@etu.univ-grenoble-alpes.fr", "Mariama.Barry@etu.univ-grenoble-alpes.fr", "Anas.Benabbou@etu.univ-grenoble-alpes.fr", "Ilian.Benaissa@etu.univ-grenoble-alpes.fr", "Sami.Bensaid@etu.univ-grenoble-alpes.fr", "Mustapha-Mahrez.Bouchelouche@etu.univ-grenoble-alpes.fr", "Walid.Bouhali@etu.univ-grenoble-alpes.fr", "Leo.Bouvier1@etu.univ-grenoble-alpes.fr", "Quentin.Bebin@etu.univ-grenoble-alpes.fr", "Kyllian.Charre@etu.univ-grenoble-alpes.fr", "Vincent.Chazeau@etu.univ-grenoble-alpes.fr", "Seynabou.Conde@etu.univ-grenoble-alpes.fr", "Levi.Cormier@etu.univ-grenoble-alpes.fr", "Samuel.Damessi@etu.univ-grenoble-alpes.fr", "Alex.Delagrange@etu.univ-grenoble-alpes.fr", "Oumou.Dembele@etu.univ-grenoble-alpes.fr", "Fatoumata.Diaby@etu.univ-grenoble-alpes.fr", "Aminata.Diagne@etu.univ-grenoble-alpes.fr", "Thierno.Diallo3@etu.univ-grenoble-alpes.fr", "Tien.Duong@etu.univ-grenoble-alpes.fr", "Anas.El-Bouchrifi@etu.univ-grenoble-alpes.fr", "Mouad.El-Kbabty@etu.univ-grenoble-alpes.fr", "Chaymae.Elkhou@etu.univ-grenoble-alpes.fr", "Khalil.Essouaid@etu.univ-grenoble-alpes.fr", "Abdelkader.Ezarouali@etu.univ-grenoble-alpes.fr", "Matias.Freund-Galeano@etu.univ-grenoble-alpes.fr", "Lucas.Giry@etu.univ-grenoble-alpes.fr", "Quentin.Grange@etu.univ-grenoble-alpes.fr", "Rayane.Guendouz@etu.univ-grenoble-alpes.fr", "Paul.Gueripel@etu.univ-grenoble-alpes.fr", "Jocelin.Heinen@etu.univ-grenoble-alpes.fr", "Floriane.Jandot@etu.univ-grenoble-alpes.fr", "Myriam.Khaddar@etu.univ-grenoble-alpes.fr", "Ibrahim-Goukouni.Khalil@etu.univ-grenoble-alpes.fr", "Zeinabou.Kone@etu.univ-grenoble-alpes.fr", "Hatim.Laghrissi@etu.univ-grenoble-alpes.fr", "Yasmine.Larbi@etu.univ-grenoble-alpes.fr", "Nour.Machmachi@etu.univ-grenoble-alpes.fr", "Salaheddin.Mesouak@etu.univ-grenoble-alpes.fr", "Souleymen.Ouchane@etu.univ-grenoble-alpes.fr", "Lyna.Oulahcene@etu.univ-grenoble-alpes.fr", "Willem.Papeau@etu.univ-grenoble-alpes.fr", "Theo.Patrac@etu.univ-grenoble-alpes.fr", "Timoty.Razafindrabe@etu.univ-grenoble-alpes.fr", "Bastien.Riado@etu.univ-grenoble-alpes.fr", "Ayman.Salouh@etu.univ-grenoble-alpes.fr", "Floreal.Sangenis@etu.univ-grenoble-alpes.fr", "Farah.Seifeddine@etu.univ-grenoble-alpes.fr", "Mariam.Sidibe@etu.univ-grenoble-alpes.fr", "Damien.Tornambe@etu.univ-grenoble-alpes.fr", "Julien.Turc@etu.univ-grenoble-alpes.fr", "Marie.Wyss@etu.univ-grenoble-alpes.fr", "Sicong.Xu@etu.univ-grenoble-alpes.fr", "Mohamad-Majd.Yagan@etu.univ-grenoble-alpes.fr", "Kokouvi.Zodjihoue@etu.univ-grenoble-alpes.fr"
-];
 
-export async function evalMutant(mutant: SerializedMutant<any>, Ltc: {ts: TestSuite, tc: TestCase}[]): Promise<{ts: TestSuite, tcr: TestCaseResult}[]> {
-  return Promise.all(
-    Ltc.map( ({tc, ts}) => new Promise<{ts: TestSuite, tcr: TestCaseResult}>( resolve => {
-      const worker = new Worker(new URL('./eval-mutant.worker', import.meta.url));
-      const timer = setTimeout(
-        () => {
-          worker.terminate();
-          resolve({ts, tcr: {...tc, pass: false, result: {exec: "failed", reason: "timeout"}}} );
-        },
-        1000
-      )
-
-      worker.onmessage = (evt: MessageEvent<TestCaseResult>) => {
-        clearTimeout(timer);
-        resolve({ts, tcr: evt.data} );
-      };
-
-      worker.postMessage({tc, seriMutant: mutant});
-    }))
-  );
-}
-
-function evalTestLocally(t: TestCase): Promise<TestCaseResult> {
-  return new Promise<TestCaseResult>(resolve => {
-    const worker = new Worker(new URL('./test-case.worker', import.meta.url));
-    const timer = setTimeout(
-      () => {
-        worker.terminate();
-        resolve({...t, pass: false, result: {exec: "failed", reason: "timeout"}});
-      },
-      1000
-    )
-    worker.onmessage = (evt: MessageEvent<TestCaseResult>) => {
-      clearTimeout(timer);
-      resolve(evt.data);
-    };
-    worker.postMessage(t);
-  });
-}
-
-interface FS_TestSuite {
-  id: string;
-  label: string;
-  LtestIds: string[];
-}
-
-const TestSuiteConverter: FirestoreDataConverter<FS_TestSuite> = {
-  toFirestore: ts => ts,
-  fromFirestore: d => d.data() as FS_TestSuite,
-}
-const TestCaseConverter: FirestoreDataConverter<TestCase> = {
-  toFirestore: tc => {
-    const obj: any = {...tc};
-    if (tc.params) {
-      obj['params'] = JSON.stringify(tc.params)
-    }
-    const expectPlay = tc.expect as ReturnType<typeof play>;
-    if (expectPlay.success) { //if defined as true
-      obj['expect']['state'] = JSON.stringify(expectPlay.state);
-    }
-    return obj;
-  },
-  fromFirestore: d => {
-    const data = d.data();
-    if (data['expect']?.['state']) { //if defined as true
-      data['expect']['state'] = JSON.parse(data['expect']['state']);
-    }
-    return {...data, params: JSON.parse(data['params'])} as TestCase
-  },
-};
-
-interface FS_User {
-  play: string;
-  winner: string;
-  isValid: string;
-  mutants: string[];
-}
-
-const TUserConverter: FirestoreDataConverter<FS_User> = {
-  toFirestore: (U: WithFieldValue<FS_User>) => U,
-  fromFirestore: U => ({
-    play: U.get("play") ?? "",
-    winner: U.get("winner") ?? "",
-    isValid: U.get("isValid") ?? "",
-    mutants: U.get("mutants") ?? [],
-  })
-}
 
 @Injectable({
   providedIn: 'root'
@@ -140,8 +60,13 @@ export class DataService implements OnDestroy {
   private collectionSuites?: CollectionReference<FS_TestSuite>;
   private collectionTests?: CollectionReference<TestCase>;
   private subscriptions: Subscription[] = [];
+  private observatedUsersDocBS = new BehaviorSubject<DocumentSnapshot<FS_User>[]>([]);
+  readonly observatedUsersDoc = this.observatedUsersDocBS.asObservable();
+  private testsVersion = new BehaviorSubject<number>(-1);
+  readonly obsTestsVersion = this.testsVersion.asObservable();
 
-  constructor(private auth: Auth, private fs: Firestore) {
+
+  constructor(private auth: Auth, private fs: Firestore, private _snackBar: MatSnackBar) {
     auth.onAuthStateChanged(this.userSubj);
     const obsU: Observable<User> = this.userSubj.pipe(
       tap(u => {
@@ -149,7 +74,7 @@ export class DataService implements OnDestroy {
           this.collectionSuites = undefined;
           this.collectionTests = undefined;
           this.docUser = undefined;
-          this.subscriptions.forEach( S => S.unsubscribe() )
+          this.subscriptions.forEach(S => S.unsubscribe())
           this.mutantsSubj.next([]);
           this.testSuitesBS.next([]);
         }
@@ -161,43 +86,76 @@ export class DataService implements OnDestroy {
 
     // User document (code and mutants)
     this.subscriptions.push(
-      obsU.pipe(switchMap( u => {
-        this.docUser = doc(this.fs, `users/${u.email}`).withConverter(TUserConverter);
-        return docData(this.docUser).pipe(
-          map( fsu => fsu.mutants.map( str => JSON.parse(str) as SerializedMutant<any>) )
-        )
-      })).subscribe( this.mutantsSubj )
+      obsU.pipe(
+        map(async u => {
+          this.docUser = doc(this.fs, `users/${u.email}`).withConverter(UserConverter);
+          const fsu = await getDoc(this.docUser)
+          const str = fsu.data()?.canObserve ?? "[]";
+          let Lstr: string[] = JSON.parse(str);
+          const email = u.email?.toLowerCase() ?? "fail";
+          Lstr = Lstr.map(s => s.toLowerCase()).filter(s => s !== email);
+          const L = await Promise.all(Lstr.map(id => getDoc(doc(this.fs, `users/${id}`).withConverter(UserConverter))))
+          this.observatedUsersDocBS.next(L.filter(s => s.exists()));
+          return docData(this.docUser).pipe(
+            map(fsu => fsu.mutants.map(str => JSON.parse(str) as SerializedMutant<any>))
+          )
+        }),
+        switchMap(PU => PU),
+        switchMap(PU => PU)
+      ).subscribe(this.mutantsSubj)
     );
 
     // Test suites
     this.subscriptions.push(
       obsU.pipe(
-        // Avoir aussi une zone de stockage possible dans des fichiers ???
-        switchMap(u => {
+        switchMap( async u => {
+          this.docUser = doc(this.fs, `users/${u.email}`).withConverter(UserConverter);
           this.collectionSuites = collection(this.fs, `users/${u.email}/suites`).withConverter(TestSuiteConverter);
           this.collectionTests = collection(this.fs, `users/${u.email}/tests`).withConverter(TestCaseConverter);
-          const obsLts = collectionData(query(this.collectionSuites), {idField: "id"});
-          return obsLts.pipe(
-            switchMap(Lts => combineLatest(Lts.map(ts => {
-              const Ltc = ts.LtestIds.map(tcid => docData(doc(this.fs, `users/${u.email}/tests/${tcid}`).withConverter(TestCaseConverter), {idField: "id"}));
-              return Ltc.length === 0 ? of({
-                id: ts.id,
-                label: ts.label,
-                tests: []
-              }) : combineLatest(Ltc).pipe(map(tests => ({
-                id: ts.id,
-                label: ts.label,
-                tests,
-              })));
-            })))
-          )
-        })
+
+          // Get saved state, if any
+          const savedState: LocalSave = (await this.readFromLocal()) ?? {
+            userMail: u.email ?? "",
+            version: -1,
+            testSuites: [] as TestSuite[]
+          };
+
+          return docData( this.docUser ).pipe(
+            switchMap(fsu => {
+              this.testsVersion.next(fsu.testsVersion);
+              console.log(`${u.email}/${savedState.userMail} && ${fsu.testsVersion}/${savedState.version}`, savedState);
+              if (u.email === savedState.userMail && fsu.testsVersion === savedState.version) {
+                console.log("On utilise la sauvegarde locale...")
+                return of( savedState.testSuites );
+              } else {
+                console.log("Maintenant on observe Firestore...")
+                const obsLts = collectionData(query(this.collectionSuites!), {idField: "id"});
+                return obsLts.pipe(
+                  switchMap(Lts => combineLatest(Lts.map(ts => {
+                    const Ltc = ts.LtestIds.map(tcid => docData(doc(this.fs, `users/${u.email}/tests/${tcid}`).withConverter(TestCaseConverter), {idField: "id"}));
+                    return Ltc.length === 0 ? of({
+                      id: ts.id,
+                      label: ts.label,
+                      tests: []
+                    }) : combineLatest(Ltc).pipe(map(tests => ({
+                      id: ts.id,
+                      label: ts.label,
+                      tests,
+                    })));
+                  }))),
+                  tap( L => this.saveToLocal(L) )
+                );
+              }
+            })
+          );
+        }),
+        switchMap( from ),
       ).subscribe(this.testSuitesBS)
     );
 
     this.localTestsSuitesResults = this.testSuites.pipe(
       // tap( Lts => console.log("Lts =", Lts) ),
-      map(Lts => Lts.map(async ts => ({...ts, tests: await Promise.all(ts.tests.map(evalTestLocally))}))),
+      map(Lts => Lts.map(async ts => ({...ts, tests: ts.tests.length === 0 ? [] : await evalTestsLocally(ts.tests)}))),
       switchMap(L => Promise.all(L)),
       shareReplay(1)
     );
@@ -212,20 +170,84 @@ export class DataService implements OnDestroy {
     return this.auth.signOut();
   }
 
-  async loginGoogle() {
-    return signInWithPopup(this.auth, googleProvider);
-  }
-
   async login({email, password}: Partial<{ email: string | null, password: string | null }>) {
     if (email && password) {
       await signInWithEmailAndPassword(this.auth, email, password);
     }
   }
 
+  async readFromLocal() {
+    const res = await fetch('/api-local');
+    let msg = res.ok ? "Tests loaded from local server" : `Error loading tests: ${res.status} ${res.statusText}`;
+    this._snackBar.open(msg, undefined,{duration: res.ok ? 1000 : 2000, verticalPosition: "top"});
+    return res.ok ? await res.json() as LocalSave : undefined;
+  }
+
+  async saveToLocal(L: TestSuite[]) {
+    try {
+      const svg: LocalSave = {
+        userMail: this.userSubj.value?.email ?? "",
+        version: this.testsVersion.value,
+        testSuites: L
+      }
+      const res = await fetch('/api-local', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(svg)
+      });
+      if (res.ok) {
+        const content = await res.json();
+        this._snackBar.open("Tests saved locally", undefined,{
+          duration: 1000,
+          verticalPosition: "top"
+        })
+        console.log("response:", content);
+      } else {
+        const msg = res.status === 504 ? "Try restarting local server : npm run local-api-server" : `Error saving file locally: ${res.status} ${res.statusText}`;
+        console.error(msg);
+        res.json().then(console.error)
+        this._snackBar.open(msg, undefined,{
+          duration: 2000,
+          verticalPosition: "top"
+        })
+      }
+    } catch(err) {
+      console.error("Error saving file locally:", err);
+      this._snackBar.open(`Error saving file locally: ${err}`, undefined,{
+        duration: 2000,
+        verticalPosition: "top"
+      })
+    }
+  }
+
+  async forceEvalStudent(docRef: DocumentReference<FS_User>) {
+    // get snapshot
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      // get tests and pass them against reference code and mutants
+      const collecTests = await getDocs(collection(this.fs, `users/${docRef.id}/tests`).withConverter(TestCaseConverter));
+      const LTests = collecTests.docs.map(d => d.data());
+
+      // Tests again local code
+      const testsVsCode = await evalTestsLocally( LTests )
+
+      // Tests again local mutants
+      const ts: TestSuite = {id: "pipo", label: "tests versus mutants", tests: []};
+      const testsVsMutants = (
+        await Promise.all( this.mutantsSubj.value.map( mutant => evalMutant(mutant, LTests.map( tc => ({ts, tc}) ) ) ) )
+      ).flatMap( l => l).map( ({tcr}) => tcr );
+
+
+    }
+  }
+
   async appendMutant(m: Mutant<any>) {
     if (this.docUser) {
-      const str: string = JSON.stringify( serializeMutant(m) );
-      updateDoc(this.docUser, {mutants: arrayUnion( str )})
+      const str: string = JSON.stringify(serializeMutant(m));
+      updateDoc(this.docUser, {mutants: arrayUnion(str)})
     }
   }
 

@@ -3,8 +3,9 @@ import { Auth, sendPasswordResetEmail, User } from '@angular/fire/auth';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import {BehaviorSubject, filter, firstValueFrom, map, Observable, of, shareReplay} from 'rxjs';
-import {DataService, logins} from './data.service';
+import {DataService} from './data.service';
 import {NavigationEnd, Router} from "@angular/router";
+import {logins} from "./utils";
 
 @Component({
   selector: 'app-root',

@@ -74,7 +74,8 @@
               "browserTarget": "l3m-va-puissance4-2023:build:production"
             },
             "development": {
-              "browserTarget": "l3m-va-puissance4-2023:build:development"
+              "browserTarget": "l3m-va-puissance4-2023:build:development",
+              "proxyConfig": "src/proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

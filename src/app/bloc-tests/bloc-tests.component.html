@@ -25,7 +25,7 @@
       <span>Edit label</span>
   </button>
   <hr/>
-  <button mat-menu-item (click)="paste()" [disabled]="!canPaste">
+  <button mat-menu-item (click)="paste()" [disabled]="!(canPaste | async)">
     <mat-icon>playlist_add</mat-icon>
     <span>Paste test case</span>
   </button>

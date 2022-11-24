@@ -6,17 +6,27 @@ import { winner } from "./data/winner";
 import * as deepEqual from 'fast-deep-equal';
 import { ExecResult, TestCase, TestCaseResult } from "./data/tests-definitions";
 
-addEventListener('message', (evt: MessageEvent<TestCase>) => {
-  const t = evt.data;
-  let res: TestCaseResult;
-  try {
-    const tcr = t.op === "isValid" ? {...t, result: {exec: "success", returns: isValid(...t.params)} as ExecResult<typeof isValid>}
-                    : t.op === "winner" ? {...t, result: {exec: "success", returns: winner(...t.params)} as ExecResult<typeof winner>}
-                      : {...t, result: {exec: "success", returns: play(...t.params)} as ExecResult<typeof play>};
-    res = {...tcr, pass: tcr.result.exec === "failed" ? false : deepEqual(tcr.expect, tcr.result.returns)}
-  } catch(err) {
-    res = {...t, pass: false, result: {exec: "failed", reason: `error: ${err}`}};
+addEventListener('message', (evt: MessageEvent<TestCase[]>) => {
+  const Lt = evt.data;
+  let Lres: TestCaseResult[] = [];
+  for (let t of Lt) {
+    let res: TestCaseResult
+    try {
+      const tcr = t.op === "isValid" ? {
+          ...t,
+          result: {exec: "success", returns: isValid(...t.params)} as ExecResult<typeof isValid>
+        }
+        : t.op === "winner" ? {
+            ...t,
+            result: {exec: "success", returns: winner(...t.params)} as ExecResult<typeof winner>
+          }
+          : {...t, result: {exec: "success", returns: play(...t.params)} as ExecResult<typeof play>};
+      res = {...tcr, pass: tcr.result.exec === "failed" ? false : deepEqual(tcr.expect, tcr.result.returns)}
+    } catch (err) {
+      res = {...t, pass: false, result: {exec: "failed", reason: `error: ${err}`}};
+    }
+    Lres.push(res);
   }
-  postMessage( res );
+  postMessage( Lres );
   close();
 });

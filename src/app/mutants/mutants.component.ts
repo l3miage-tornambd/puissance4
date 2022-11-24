@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component, Inject, OnInit} from '@angular/core';
-import {DataService, evalMutant} from "../data.service";
+import {DataService} from "../data.service";
 import {combineLatest, firstValueFrom, map, Observable, switchMap, from, tap, shareReplay} from "rxjs";
 import {User} from "@angular/fire/auth";
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from "@angular/material/dialog";
@@ -9,6 +9,7 @@ import {
   SerializedMutant, TestCase,
   TestCaseResult, TestSuite, unserializeMutant,
 } from "../data/tests-definitions";
+import {evalMutant} from "../utils";
 
 interface MutantUI {
   op: string;
@@ -40,7 +41,7 @@ export class MutantsComponent implements OnInit {
           Ltcts: Ltcts.filter( ({tc}) => tc.op === op)
         } as {op: string, LMutants: SerializedMutant<any>[], Ltcts: {ts: TestSuite, tc: TestCase}[]}) )
       ),
-      tap( Lop => console.log("Lop =", Lop) ),
+      // tap( Lop => console.log("Lop =", Lop) ),
       map(async Lop => Promise.all( Lop.map(
         async ({op, LMutants, Ltcts}) => ({
           op,
