@@ -12,10 +12,8 @@ import {FS_User} from "../utils";
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ServerTestsComponent implements OnInit {
-  readonly obsUserDocs: Observable<DocumentSnapshot<FS_User>[]>;
 
   constructor(private dataService: DataService) {
-    this.obsUserDocs = dataService.observatedUsersDoc;
   }
 
   ngOnInit(): void {

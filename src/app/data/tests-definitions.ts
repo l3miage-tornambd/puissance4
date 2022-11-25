@@ -19,6 +19,18 @@ export type DATAEXEC<T extends EXECTYPE> = T extends typeof winner ? Pick<TestCa
                                          : T extends typeof play ? Pick<TestCasePlay   , "op" | "params">
                                          : Pick<TestCaseIsValid, "op" | "params">
 
+export interface TestSuite {
+  readonly id: string;
+  readonly label: string;
+  readonly tests: readonly TestCase[];
+}
+
+export interface TestSuiteResults {
+  readonly id: string;
+  readonly label: string;
+  readonly tests: readonly TestCaseResult[];
+}
+
 export interface Mutant<T extends EXECTYPE> {
   op: T extends typeof isValid ? "isValid"
     : T extends typeof winner ? "winner"
@@ -85,14 +97,3 @@ export function getSerializedMutantFromCodeComment({code, comment}: {code: strin
   return undefined;
 }
 
-export interface TestSuite {
-  readonly id: string;
-  readonly label: string;
-  readonly tests: readonly TestCase[];
-}
-
-export interface TestSuiteResults {
-  readonly id: string;
-  readonly label: string;
-  readonly tests: readonly TestCaseResult[];
-}

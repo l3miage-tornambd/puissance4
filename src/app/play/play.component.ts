@@ -6,27 +6,15 @@ import {isValid} from "../data/isValid";
 import {CopypasteService} from "../copypaste.service";
 import {
   BehaviorSubject,
-  from,
-  merge,
-  Observable, OperatorFunction,
+  Observable,
   shareReplay,
-  Subject,
-  switchMap, tap,
-  zip
+  switchMap,
 } from "rxjs";
 import { DATAEXEC, EXECTYPE, ExecResult } from '../data/tests-definitions';
 import { play } from '../data/play';
+import {runInZone} from "../utils";
 
-function runInZone<T>(zone: NgZone): OperatorFunction<T, T> {
-  return (source) => {
-    return new Observable(observer => {
-      const onNext = (value: T) => zone.run(() => observer.next(value));
-      const onError = (e: any) => zone.run(() => observer.error(e));
-      const onComplete = () => zone.run(() => observer.complete());
-      return source.subscribe(onNext, onError, onComplete);
-    });
-  };
-}
+
 
 async function execF<T extends EXECTYPE>(ex: DATAEXEC<T>): Promise<ExecResult<T>> {
   return new Promise( resolve => {
