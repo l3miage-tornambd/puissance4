@@ -10,10 +10,19 @@
     <ul>
       <li *ngFor="let res of mui.L">
         <summary>
+          <!--2<button class="menu"
+                  mat-icon-button
+                  [matMenuTriggerFor]="menu"
+          >
+            <mat-icon>more_vert</mat-icon>
+          </button> -->
+
           <label>{{res.mutant.comment}} (tests failed {{res.fail.length}}/{{res.fail.length + res.pass.length}})</label>
           <details>
-            <pre>{{res.mutant.body}}</pre>
             <app-test-case style="display: block" *ngFor="let tstc of res.fail" [test]="tstc.tcr" [suite]="tstc.ts"></app-test-case>
+            <pre>
+              {{res.mutant.body}}
+            </pre>
           </details>
         </summary>
 
@@ -26,3 +35,19 @@
 <ng-template #notLogged>
   You must be logged in to access this ressource...
 </ng-template>
+
+
+
+<mat-menu #menu="matMenu">
+  <!--
+  <button mat-menu-item (click)="edit()" >
+    <mat-icon>edit</mat-icon>
+    <span>Edit</span>
+  </button>
+  <hr/>
+  <button mat-menu-item (click)="delete()">
+    <mat-icon>delete</mat-icon>
+    <span>Delete</span>
+  </button>
+  -->
+</mat-menu>

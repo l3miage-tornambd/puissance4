@@ -13,8 +13,14 @@
           <button (click)="forceEval(U)">eval</button>
           {{getStudentName(U)}}
         </td>
-        <td>
-          {{getStudentResult(U) | json}}
+        <td *ngIf="getStudentResult(U) as R">
+          <div>Version {{version(R)}}</div>
+          <div>
+            Tests versus reference code: {{versusCode(R)}}
+          </div>
+          <div>
+            Tests versus mutants: {{versusMutants(R)}}
+          </div>
         </td>
       </tr>
     </tbody>

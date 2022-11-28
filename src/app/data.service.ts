@@ -20,7 +20,7 @@ import {
   CollectionReference,
   addDoc,
   updateDoc, deleteDoc,
-  DocumentReference, arrayUnion, getDocs, getDoc,
+  DocumentReference, arrayUnion, getDocs, getDoc, arrayRemove,
 } from "@angular/fire/firestore";
 import {
   Mutant, SerializedMutant, serializeMutant,
