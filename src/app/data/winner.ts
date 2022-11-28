@@ -7,7 +7,7 @@ const directions: DIRECTION[] = [
 ]
 
 export function winnerCond(state: GAME_STATE, f: (P: PLAYER) => boolean): ReturnType<typeof winner> {
-  let player: PLAYER = "P1";
+  let player: PLAYER;
   if (state.grid.find(
     (L, col) => L.find((token, line) => f(token) && directions.find(([dc, dl]) => {
         // 4 same in that direction, from that position
@@ -24,7 +24,7 @@ export function winnerCond(state: GAME_STATE, f: (P: PLAYER) => boolean): Return
       })
     ))
   ) {
-    return player;
+    return player!;
   }
 
   return !state.grid.find( L => L.length < 6) ? "DRAW" : "no winner yet";

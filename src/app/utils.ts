@@ -98,24 +98,36 @@ export const TestCaseConverter: FirestoreDataConverter<TestCase> = {
   },
 };
 
+export interface STAT<T> {
+  play: T;
+  isValid: T;
+  winner: T;
+}
+
 export interface FS_User {
-  play: string;
-  winner: string;
-  isValid: string;
-  canObserve?: string;
+  email: string;
   mutants: string[];
   testsVersion: number;
+  canObserve?: string;
+  evals: [
+    version: number,
+    testsVersusCoderef: STAT<[pass: number, total: number]>,
+    testsVersusMutants: STAT<[eliminate: number, total: number]>,
+  ]
 }
 
 export const UserConverter: FirestoreDataConverter<FS_User> = {
   toFirestore: (U: WithFieldValue<FS_User>) => U,
   fromFirestore: U => ({
-    play: U.get("play") ?? "",
-    winner: U.get("winner") ?? "",
-    isValid: U.get("isValid") ?? "",
+    email: U.id,
     canObserve: U.get("canObserve"),
-    mutants: U.get("mutants"),
-    testsVersion: U.get("testsVersion") ?? 0
+    mutants: U.get("mutants") ?? [],
+    testsVersion: U.get("testsVersion") ?? 0,
+    evals: U.get("evals") ?? [
+      -1,
+      {play: [0,0], isValid: [0,0], winner: [0,0]},
+      {play: [0,0], isValid: [0,0], winner: [0,0]},
+    ] as FS_User["evals"]
   })
 }
 

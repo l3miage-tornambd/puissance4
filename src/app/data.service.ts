@@ -1,7 +1,7 @@
 import {Injectable, NgZone, OnDestroy} from '@angular/core';
 import {
   BehaviorSubject,
-  combineLatest, debounceTime, distinctUntilChanged, filter,
+  combineLatest, debounceTime, distinctUntilChanged, filter, firstValueFrom,
   map,
   Observable,
   of,
@@ -20,12 +20,11 @@ import {
   CollectionReference,
   addDoc,
   updateDoc, deleteDoc,
-  DocumentReference, arrayUnion, getDocs, getDoc, setDoc,
-  DocumentSnapshot
+  DocumentReference, arrayUnion, getDocs, getDoc,
 } from "@angular/fire/firestore";
 import {
   Mutant, SerializedMutant, serializeMutant,
-  TestCase,
+  TestCase, TestCaseResult,
   TestSuite,
   TestSuiteResults
 } from './data/tests-definitions';
@@ -34,7 +33,7 @@ import {
   evalMutant,
   evalTestsLocally,
   FS_TestSuite,
-  FS_User, LocalSave, runInZone,
+  FS_User, runInZone, STAT,
   TestCaseConverter,
   TestSuiteConverter,
   UserConverter
@@ -44,14 +43,16 @@ interface STATE {
   readonly userMail: string;
   readonly version: number;
   readonly mutants: SerializedMutant<any>[];
-  readonly suites: readonly TestSuite[]
+  readonly suites: readonly TestSuite[];
+  canObserve: Observable<FS_User[]>;
 }
 
 const emptyState: STATE = {
   userMail: "",
   version: -1,
   mutants: [],
-  suites: []
+  suites: [],
+  canObserve: of([])
 };
 
 @Injectable({
@@ -71,9 +72,10 @@ export class DataService implements OnDestroy {
   readonly mutants: Observable<SerializedMutant<any>[]>;
   readonly testSuites: Observable<readonly TestSuite[]>;
   readonly localTestsSuitesResults: Observable<readonly TestSuiteResults[]>;
+  readonly usersObserved: Observable<FS_User[]>;
 
   constructor(private auth: Auth, private fs: Firestore, private _snackBar: MatSnackBar, private ngZone: NgZone) {
-    this.stateObs = this.stateBS.pipe( runInZone(ngZone) );
+    this.stateObs = this.stateBS.asObservable(); // .pipe( runInZone(ngZone) );
     this.mutants = this.stateObs.pipe(map(S => S.mutants))
     this.testSuites = this.stateObs.pipe(map(S => S.suites));
     this.localTestsSuitesResults = this.testSuites.pipe(
@@ -81,6 +83,11 @@ export class DataService implements OnDestroy {
       switchMap(L => Promise.all(L)),
       shareReplay(1)
     );
+    this.usersObserved = this.stateObs.pipe(
+      switchMap(S => S.canObserve ),
+      map( L => L.filter(u => !!u) ),
+      shareReplay(1)
+    )
 
     auth.onAuthStateChanged(this.userSubj);
     const obsU: Observable<User> = this.userSubj.pipe(
@@ -127,7 +134,8 @@ export class DataService implements OnDestroy {
             suites: Lts.map(ts => ({
               ...ts,
               tests: ts.LtestIds.map(idTc => Ltc.find(tc => tc.id === idTc)!)
-            }))
+            })),
+            canObserve: this.getObsUsersFromEmails( fsu.canObserve ? JSON.parse(fsu.canObserve) : [])
           })),
           map(async S => {
             return (await this.saveToLocal(S)) ? S : emptyState;
@@ -140,7 +148,7 @@ export class DataService implements OnDestroy {
 
         this.subscriptions.push(obsUser.subscribe(fsu => {
           if (fsu.testsVersion === savedState.version) {
-            console.log("On utilise la sauvegarde locale...")
+            console.log("On utilise la sauvegarde locale...", savedState)
             subjFireStore.next(savedState);
           } else {
             if (!subToFS) {
@@ -171,9 +179,23 @@ export class DataService implements OnDestroy {
     }
   }
 
-  async readFromLocal() {
+  private getObsUsersFromEmails(Lmails: string[]): Observable<FS_User[]> {
+    return combineLatest( Lmails.map(
+      uid => docData( doc(this.fs, `users/${uid}` ).withConverter(UserConverter) )
+    ))
+  }
+
+  async readFromLocal(): Promise<STATE | undefined> {
     const res = await fetch('/api-local');
-    return res.ok ? await res.json() as STATE : undefined;
+    const tmp = res.ok ? await res.json() : undefined;
+    if (tmp) {
+      return {
+        ...tmp,
+        canObserve: this.getObsUsersFromEmails( (tmp.canObserve as string[]) ?? [] )
+      }
+    } else {
+      return undefined;
+    }
   }
 
   async saveToLocal(S: STATE): Promise<boolean> {
@@ -184,7 +206,10 @@ export class DataService implements OnDestroy {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(S)
+        body: JSON.stringify({
+          ...S,
+          canObserve: (await firstValueFrom(S.canObserve)).filter(u => !!u).map( u => u.email )
+        })
       });
       if (res.ok) {
         const content = await res.json();
@@ -209,25 +234,65 @@ export class DataService implements OnDestroy {
     return false;
   }
 
-  async forceEvalStudent(docRef: DocumentReference<FS_User>) {
-    // get snapshot
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
-      // get tests and pass them against reference code and mutants
-      const collecTests = await getDocs(collection(this.fs, `users/${docRef.id}/tests`).withConverter(TestCaseConverter));
-      const LTests = collecTests.docs.map(d => d.data());
+  async forceEvalStudent(U: FS_User) {
+    // get tests and suites
+    const [snapLts, snapLtc] = await Promise.all([
+      getDocs( collection(this.fs, `users/${U.email}/suites`).withConverter(TestSuiteConverter) ),
+      getDocs( collection(this.fs, `users/${U.email}/tests`).withConverter(TestCaseConverter) ),
+    ]);
 
-      // Tests again local code
-      const testsVsCode = await evalTestsLocally(LTests)
+    const Ltctmp = snapLtc.docs.map( s => s.data()  );
+    const Lts = snapLts.docs.map( s => s.data() );
+    Lts.forEach( ts => ts.LtestIds.forEach( tcid => {
+      if (!Ltctmp.find(tc => tc.id === tcid)) {
+        console.error("problem with", ts, tcid)
+      }
+    } ) )
+    const Ltc: TestCase[] = Lts.flatMap( ts => ts.LtestIds.map( tcid => Ltctmp.find(tc => tc.id === tcid)! ) )
+    const Ltcr = await evalTestsLocally(Ltc);
+    const LtcPlay    = Ltcr.filter( tc => tc.op === "play"    );
+    const LtcWinner  = Ltcr.filter( tc => tc.op === "winner"  );
+    const LtcIsValid = Ltcr.filter( tc => tc.op === "isValid" );
 
-      // Tests again local mutants
-      const ts: TestSuite = {id: "pipo", label: "tests versus mutants", tests: []};
-      const testsVsMutants = (
-        await Promise.all(this.stateBS.value.mutants.map(mutant => evalMutant(mutant, LTests.map(tc => ({ts, tc})))))
-      ).flatMap(l => l).map(({tcr}) => tcr);
-
-
+    // Tests again code
+    const evalCode: FS_User["evals"][1] = {
+      play: [LtcPlay.filter(tcr => tcr.pass).length, LtcPlay.length] ,
+      isValid: [LtcIsValid.filter(tcr => tcr.pass).length, LtcIsValid.length] ,
+      winner: [LtcWinner.filter(tcr => tcr.pass).length, LtcWinner.length] ,
     }
+
+    console.log(
+      LtcPlay.filter(tcr => !tcr.pass),
+      LtcIsValid.filter(tcr => !tcr.pass),
+      LtcWinner.filter(tcr => !tcr.pass),
+    )
+
+    const Lmutants = this.stateBS.value.mutants;
+    const mutantsPlay = Lmutants.filter( m => m.op === "play");
+    const mutantsWinner = Lmutants.filter( m => m.op === "winner");
+    const mutantsIsValid = Lmutants.filter( m => m.op === "isValid");
+    const tsMutants: TestSuite = {id: "mutants", label: "Testing mutants", tests: []}
+    const [Ltcrplay, LtcrWinner, LtcrIsValid] = await Promise.all([
+      Promise.all(mutantsPlay   .map( m => evalMutant(m, LtcPlay   .map( tc => ({ts: tsMutants, tc}) )) )),
+      Promise.all(mutantsWinner .map( m => evalMutant(m, LtcWinner .map( tc => ({ts: tsMutants, tc}) )) )),
+      Promise.all(mutantsIsValid.map( m => evalMutant(m, LtcIsValid.map( tc => ({ts: tsMutants, tc}) )) )),
+    ]);
+    const evalMutants: FS_User["evals"][2] = {
+      play: [Ltcrplay.reduce( (nb, L) => L.find( ({tcr}) => !tcr.pass) ? nb + 1 : nb, 0), mutantsPlay.length], // [eliminate: number, total: number]
+      winner: [LtcrWinner.reduce( (nb, L) => L.find( ({tcr}) => !tcr.pass) ? nb + 1 : nb, 0), mutantsWinner.length],
+      isValid: [LtcrIsValid.reduce( (nb, L) => L.find( ({tcr}) => !tcr.pass) ? nb + 1 : nb, 0), mutantsIsValid.length],
+    }
+
+    // Mettre à jour les résultats pour l'étudiant
+    updateDoc( doc(this.fs, `users/${U.email}`).withConverter(UserConverter), {
+      evals: [
+        U.testsVersion,
+        evalCode,
+        evalMutants
+      ]
+    } )
+    // Sauvegarder pour le demandeur ?
+
   }
 
   async appendMutant(m: Mutant<any>) {

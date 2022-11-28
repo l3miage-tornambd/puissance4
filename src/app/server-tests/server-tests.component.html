@@ -8,17 +8,15 @@
       <th>Evaluation</th>
     </thead>
     <tbody>
-    <!--
-      <tr *ngFor="let userDoc of obsUserDocs | async">
+      <tr *ngFor="let U of usersObserved | async">
         <td>
-          <button (click)="forceEval(userDoc)">eval</button>
-          {{getStudentName(userDoc)}}
+          <button (click)="forceEval(U)">eval</button>
+          {{getStudentName(U)}}
         </td>
         <td>
-          {{getStudentResult(userDoc)}}
+          {{getStudentResult(U) | json}}
         </td>
       </tr>
-      -->
     </tbody>
   </table>
 </ng-container>

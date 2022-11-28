@@ -39,7 +39,7 @@ export class GameStateComponent implements OnInit {
   paste() {
     const state = this.cp.pasteGameState();
     if (state) {
-      this.state = state;
+      this.update.emit(this.state = state);
     }
   }
 
