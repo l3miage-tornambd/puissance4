@@ -13,9 +13,11 @@ import {collection, getDocs} from "@angular/fire/firestore";
 })
 export class ServerTestsComponent implements OnInit {
   readonly usersObserved: Observable<FS_User[]>;
+  readonly evalsObs: Observable<FS_User['evals']>;
 
   constructor(private dataService: DataService) {
     this.usersObserved = dataService.usersObserved;
+    this.evalsObs = dataService.evalsObs;
   }
 
   ngOnInit(): void {
@@ -41,18 +43,25 @@ export class ServerTestsComponent implements OnInit {
     return E[0];
   }
 
-  versusCode(E: FS_User['evals']) {
+  versusCode(E: FS_User['evals']): string {
     const P = E[1].play;
     const V = E[1].isValid;
     const W = E[1].winner;
-    return `f(pass/total) isValid(${V[0]}/${V[1]}) winner(${W[0]}/${W[1]}) play(${P[0]}/${P[1]})`
+    return `(pass/total):
+            <label class="${V[1] > 0 && V[0] === V[1] ? 'pass' : 'fail'}">isValid: ${V[0]}/${V[1]}</label>
+            <label class="${W[1] > 0 && W[0] === W[1] ? 'pass' : 'fail'}"> winner: ${W[0]}/${W[1]}</label>
+            <label class="${P[1] > 0 && P[0] === P[1] ? 'pass' : 'fail'}">   play: ${P[0]}/${P[1]}</label>`
   }
 
-  versusMutants(E: FS_User['evals']) {
+  versusMutants(E: FS_User['evals']): string {
     const P = E[2].play;
     const V = E[2].isValid;
     const W = E[2].winner;
-    return `f(killed/total) isValid(${V[0]}/${V[1]}) winner(${W[0]}/${W[1]}) play(${P[0]}/${P[1]})`
+    return `(killed/total):
+            <label class="${V[1] > 0 && V[0] === V[1] ? 'pass' : 'fail'}">isValid: ${V[0]}/${V[1]}</label>
+            <label class="${W[1] > 0 && W[0] === W[1] ? 'pass' : 'fail'}"> winner: ${W[0]}/${W[1]}</label>
+            <label class="${P[1] > 0 && P[0] === P[1] ? 'pass' : 'fail'}">   play: ${P[0]}/${P[1]}</label>`
+
   }
 
 }

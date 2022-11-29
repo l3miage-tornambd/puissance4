@@ -1,8 +1,13 @@
 <ng-container *ngIf="obsUser | async as U; else notLogged">
   <h2>Evaluation from the server</h2>
+  <pre *ngIf="(evalsObs | async) as E">
+    Version {{E[0]}}
+    Yout tests versus correction codes <span [innerHTML]="versusCode(E)"></span>
+    Your tests versus hordes of mutants <span [innerHTML]="versusMutants(E)"></span>
+  </pre>
 
   <hr/>
-  <table>
+  <table *ngIf="(usersObserved | async)?.length">
     <thead>
       <th>Student</th>
       <th>Evaluation</th>
@@ -15,12 +20,8 @@
         </td>
         <td *ngIf="getStudentResult(U) as R">
           <div>Version {{version(R)}}</div>
-          <div>
-            Tests versus reference code: {{versusCode(R)}}
-          </div>
-          <div>
-            Tests versus mutants: {{versusMutants(R)}}
-          </div>
+          <pre>Tests versus reference code: <span [innerHTML]="versusCode(R)"></span></pre>
+          <pre>Tests versus mutants: <span [innerHTML]="versusMutants(R)"></span></pre>
         </td>
       </tr>
     </tbody>

@@ -5,7 +5,7 @@ import {
   map,
   Observable,
   of,
-  shareReplay, Subject,
+  shareReplay, startWith, Subject,
   Subscription,
   switchMap, tap,
 } from 'rxjs';
@@ -44,7 +44,8 @@ interface STATE {
   readonly version: number;
   readonly mutants: SerializedMutant<any>[];
   readonly suites: readonly TestSuite[];
-  canObserve: Observable<FS_User[]>;
+  readonly canObserve: Observable<FS_User[]>;
+  readonly evals: FS_User['evals'];
 }
 
 const emptyState: STATE = {
@@ -52,7 +53,12 @@ const emptyState: STATE = {
   version: -1,
   mutants: [],
   suites: [],
-  canObserve: of([])
+  canObserve: of([]),
+  evals: [
+    -1,
+    {play: [0,0], isValid: [0,0], winner: [0,0]},
+    {play: [0,0], isValid: [0,0], winner: [0,0]},
+  ]
 };
 
 @Injectable({
@@ -73,11 +79,13 @@ export class DataService implements OnDestroy {
   readonly testSuites: Observable<readonly TestSuite[]>;
   readonly localTestsSuitesResults: Observable<readonly TestSuiteResults[]>;
   readonly usersObserved: Observable<FS_User[]>;
+  readonly evalsObs: Observable<FS_User['evals']>;
 
   constructor(private auth: Auth, private fs: Firestore, private _snackBar: MatSnackBar, private ngZone: NgZone) {
     this.stateObs = this.stateBS.asObservable(); // .pipe( runInZone(ngZone) );
     this.mutants = this.stateObs.pipe(map(S => S.mutants))
     this.testSuites = this.stateObs.pipe(map(S => S.suites));
+    this.evalsObs = this.stateObs.pipe( map(S => S.evals) );
     this.localTestsSuitesResults = this.testSuites.pipe(
       map(Lts => Lts.map(async ts => ({...ts, tests: ts.tests.length === 0 ? [] : await evalTestsLocally(ts.tests)}))),
       switchMap(L => Promise.all(L)),
@@ -135,7 +143,8 @@ export class DataService implements OnDestroy {
               ...ts,
               tests: ts.LtestIds.map(idTc => Ltc.find(tc => tc.id === idTc)!)
             })),
-            canObserve: this.getObsUsersFromEmails( fsu.canObserve ? JSON.parse(fsu.canObserve) : [])
+            canObserve: this.getObsUsersFromEmails( fsu.canObserve ? JSON.parse(fsu.canObserve) : []),
+            evals: fsu.evals,
           })),
           map(async S => {
             return (await this.saveToLocal(S)) ? S : emptyState;
@@ -182,7 +191,9 @@ export class DataService implements OnDestroy {
   private getObsUsersFromEmails(Lmails: string[]): Observable<FS_User[]> {
     return combineLatest( Lmails.map(
       uid => docData( doc(this.fs, `users/${uid}` ).withConverter(UserConverter) )
-    ))
+    )).pipe(
+      startWith( [] )
+    );
   }
 
   async readFromLocal(): Promise<STATE | undefined> {
@@ -219,7 +230,7 @@ export class DataService implements OnDestroy {
         })
         return true;
       } else {
-        const msg = res.status === 504 ? "Try restarting local server : npm run local-api-server" : `Error saving file locally: ${res.status} ${res.statusText}`;
+        const msg = res.status === 504 ? "Try restarting local server : npm run local-api-server" : `Error saving file on local server: ${res.status} ${res.statusText}`;
         console.error(msg);
         this._snackBar.open(msg, undefined, {
           verticalPosition: "top"
