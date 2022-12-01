@@ -10,7 +10,8 @@ function nb(state: GAME_STATE, p: GAME_STATE["turn"]): number {
 
 /**
  * Evaluate the validity of the provided state.
- * Errors are chosen in the declaration order (if several errors are possible, returns the first one in the list).
+ * If the game state is invalid, the returned error is chosen with respect to following declaration order.
+ * (if several errors are possible, returns the first one in the following list).
  * @param state the state to evaluate
  * @returns {valid: true}
  *          if the state is a valid one (number of token is correct provided player turn)
@@ -27,9 +28,9 @@ function nb(state: GAME_STATE, p: GAME_STATE["turn"]): number {
  export function isValid(state: GAME_STATE): Readonly<{valid: true}>
  | Readonly<{
        valid: false,
-       reason: `not the turn of ${PLAYER}`
-             | `too much token for ${PLAYER}` // PLAYER has too much token provided that it is the turn of state.turn and P1 begins
-             | `column ${1 | 2 | 3 | 4 | 5 | 6 | 7} has too much tokens`
+       reason: `column ${1 | 2 | 3 | 4 | 5 | 6 | 7} has too much tokens`
+             | `not the turn of ${PLAYER}`
+             | `too much token for ${PLAYER}`
              | `There cannot be two winners`
    }>
 {

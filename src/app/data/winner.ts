@@ -32,7 +32,8 @@ export function winnerCond(state: GAME_STATE, f: (P: PLAYER) => boolean): Return
 
 /**
  * Returns the winner for a given state.
- * Codes are chosen in the declaration order (if several codes are possible, returns the first one in the list).
+ * Returns values are chosen in the declaration order
+ * (if several return values are possible, returns the first one in the list).
  * @param state the state to evaluate, supposed to be a valid one.
  * @returns P1 if there are at least 4 P1 tokens aligned.
  * @returns P2 if there are at least 4 P2 tokens aligned.
@@ -40,7 +41,5 @@ export function winnerCond(state: GAME_STATE, f: (P: PLAYER) => boolean): Return
  * @returns "no winner yet" if the grid is not full and no player has 4 aligned tokens.
  */
  export function winner(state: GAME_STATE): PLAYER | "DRAW" | "no winner yet" {
-   // let toto: any;
-   // toto.marf = 4;
    return winnerCond(state, () => true)
  }

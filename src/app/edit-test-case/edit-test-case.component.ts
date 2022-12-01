@@ -34,7 +34,7 @@ export class EditTestCaseComponent implements OnInit {
     "DRAW", "P1", "P2", "no winner yet"
   ];
   readonly expectPlay_allReasons: PLAY_FAILURE["reason"][] = [
-    "column is full", "game is over", "no such column"
+    "column is full", "no such column"
   ];
 
   op: TestCase["op"];
