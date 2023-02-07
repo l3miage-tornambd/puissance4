@@ -49,3 +49,6 @@ Thumbs.db
 # stryker temp files
 .stryker-tmp
 /reports/mutation/mutation.html
+
+# Others
+/src/data-tests/*

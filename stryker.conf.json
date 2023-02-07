@@ -15,7 +15,7 @@
     "projectType": "angular-cli",
     "config": {
       "browsers": [
-        "ChromeHeadless"
+        "FirefoxHeadless"
       ]
     }
   },
@@ -24,7 +24,7 @@
     "clear-text",
     "html"
   ],
-  "concurrency": 6,
+  "concurrency": 1,
   "concurrency_comment": "Recommended to use about half of your available cores when running stryker with angular",
   "coverageAnalysis": "perTest"
 }
