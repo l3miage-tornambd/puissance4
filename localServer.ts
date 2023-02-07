@@ -7,7 +7,7 @@ app.use(express.json());
 
 const path = require('path')
 app.use('/coverage', express.static(path.join(__dirname, '/coverage/l3m-va-puissance4-2023')))
-app.use('/static', express.static(path.join(__dirname, '/coverage/l3m-va-puissance4-2023')))
+app.use('/mutants', express.static(path.join(__dirname, '/reports/mutation')))
 
 const dirPath = `./src/app/data-tests`;
 const strDeclaration = "export const dataTests = ";
