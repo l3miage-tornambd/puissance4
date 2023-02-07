@@ -2,8 +2,10 @@ import {winner} from "./winner";
 import {play} from "./play";
 import {isValid} from "./isValid";
 import {TestSuite} from "./tests-definitions";
+import { dataTests } from "../data-tests/tests";
 
-const Ltests = [] as TestSuite[];
+
+const Ltests = dataTests.suites as unknown as TestSuite[];
 
 for (const ts of Ltests) {
   describe(ts.label, () => {

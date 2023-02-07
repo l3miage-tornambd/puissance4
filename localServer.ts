@@ -7,11 +7,12 @@ app.use(express.json());
 
 
 const dirPath = `./src/app/data-tests`;
+const strDeclaration = "export const dataTests = ";
 
 app.get('/', (req: Request, res: Response) => {
-  const fName = `${dirPath}/tests.json`;
+  const fName = `${dirPath}/tests.ts`;
   if (existsSync(fName)) {
-    const str = readFileSync(fName, {encoding: 'utf-8'})
+    const str = readFileSync(fName, {encoding: 'utf-8'}).slice(strDeclaration.length)
     res.json( JSON.parse(str) );
   } else {
     res.json({
@@ -23,14 +24,14 @@ app.get('/', (req: Request, res: Response) => {
 })
 
 app.post('/', (req: Request, res: Response) => {
-  const fName = `${dirPath}/tests.json`;
+  const fName = `${dirPath}/tests.ts`;
   if (existsSync(fName)) {
     // Rename it
-    renameSync(fName, `${dirPath}/tests.${Date.now()}.json`)
+    renameSync(fName, `${dirPath}/tests.${Date.now()}.ts`)
   }
   // Save new
   try {
-    writeFileSync(fName, JSON.stringify(req.body), {encoding: "utf-8",flag:'w'} )
+    writeFileSync(fName, `${strDeclaration}${JSON.stringify(req.body)}`, {encoding: "utf-8",flag:'w'} )
     res.json({saved: true, data: req.body} );
   } catch(err) {
     res.status(500).json({saved: false, reason: err} );
