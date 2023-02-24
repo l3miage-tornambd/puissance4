@@ -20,7 +20,7 @@ import {
   CollectionReference,
   addDoc,
   updateDoc, deleteDoc,
-  DocumentReference, arrayUnion, getDocs, getDoc, arrayRemove,
+  DocumentReference, arrayUnion, getDocs, setDoc, getDoc,
 } from "@angular/fire/firestore";
 import {
   Mutant, SerializedMutant, serializeMutant,
@@ -128,7 +128,22 @@ export class DataService implements OnDestroy {
         let savedState = data ?? emptyState;
 
         // Get observable from Firestore (no subscribe yet)
-        const obsUser = docData(this.docUser);
+        const docSnap = await getDoc(this.docUser);
+        if (!docSnap.exists()) {
+          await setDoc(this.docUser, {
+            email: u.email ?? "",
+            mutants: [],
+            testsVersion: 0,
+            evals: [
+              -1, 
+              {play: [0, 0], isValid: [0, 0], winner: [0, 0]},
+              {play: [0, 0], isValid: [0, 0], winner: [0, 0]}
+            ]
+          })
+        }
+        const obsUser = docData(this.docUser).pipe(
+          filter( fsu => !!fsu )
+        );
         const obsLts = collectionData(query(this.collectionSuites!), {idField: "id"}).pipe(shareReplay(1));
         const obsLtc = collectionData(query(this.collectionTests!), {idField: "id"}).pipe(shareReplay(1));
 
